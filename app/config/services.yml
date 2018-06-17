@@ -1,0 +1,13 @@
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    ApiBundle\Controller\:
+        resource: '../../src/ApiBundle/Controller'
+        public: true
+        tags: ['controller.service_arguments']
+
