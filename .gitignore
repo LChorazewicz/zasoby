@@ -1,0 +1,7 @@
+app/config/*
+!app/config/*.dist
+var/*
+vendor/*
+web/assets/*
+.idea/
+composer.lock

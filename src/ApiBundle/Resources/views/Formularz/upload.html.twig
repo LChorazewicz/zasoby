@@ -1,0 +1,41 @@
+{% extends "@Api/base.html.twig" %}
+
+{% block title %}
+    <title>Formularz uploadu</title>
+{% endblock %}
+
+{% block body %}
+    {{ form_start(pola) }}
+    <div class="form-group">
+        {{ form_label(pola.login) }}
+        {{ form_widget(pola.login) }}
+
+        {{ form_label(pola.haslo) }}
+        {{ form_widget(pola.haslo) }}
+
+        {{ form_label(pola.token) }}
+        {{ form_widget(pola.token) }}
+
+        <br>
+        <div class="custom-file">
+            {{ form_widget(pola.plik) }}
+            {{ form_label(pola.plik) }}
+        </div><br><br>
+        {{ form_widget(pola.uploaduj) }}
+    </div>
+    {{ form_end(pola) }}
+    <script>
+        $('#form_plik').change(
+            function(e){
+                let tablica = e.target.files,
+                    nazwy_plikow = [];
+
+                for (let i = 0; i <= tablica.length - 1; i++){
+                    nazwy_plikow.push(tablica[i].name);
+                }
+
+                $('#form_plik').parent().find('label').text(nazwy_plikow.join(", "));
+            });
+    </script>
+
+{% endblock %}
