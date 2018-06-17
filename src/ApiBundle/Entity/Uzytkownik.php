@@ -7,277 +7,220 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Uzytkownik
  *
- * @ORM\Table(name="uzytkownik")
+ * @ORM\Table(name="uzytkownik", uniqueConstraints={@ORM\UniqueConstraint(name="UNIQ_9EF01856AA08CB10", columns={"login"}), @ORM\UniqueConstraint(name="UNIQ_9EF01856E7927C74", columns={"email"}), @ORM\UniqueConstraint(name="UNIQ_9EF01856897DA477", columns={"telefon"}), @ORM\UniqueConstraint(name="UNIQ_9EF018563931747B", columns={"pesel"})})
  * @ORM\Entity(repositoryClass="ApiBundle\Repository\UzytkownikRepository")
  */
 class Uzytkownik
 {
     /**
-     * @var int
+     * @var integer
      *
-     * @ORM\Column(name="id", type="integer")
+     * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
     /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId(int $id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogin(): string
+    {
+        return $this->login;
+    }
+
+    /**
+     * @param string $login
+     */
+    public function setLogin(string $login)
+    {
+        $this->login = $login;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param string $email
+     */
+    public function setEmail(string $email)
+    {
+        $this->email = $email;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHaslo(): string
+    {
+        return $this->haslo;
+    }
+
+    /**
+     * @param string $haslo
+     */
+    public function setHaslo(string $haslo)
+    {
+        $this->haslo = $haslo;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIdgrupy(): int
+    {
+        return $this->idgrupy;
+    }
+
+    /**
+     * @param int $idgrupy
+     */
+    public function setIdgrupy(int $idgrupy)
+    {
+        $this->idgrupy = $idgrupy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getImie(): string
+    {
+        return $this->imie;
+    }
+
+    /**
+     * @param string $imie
+     */
+    public function setImie(string $imie)
+    {
+        $this->imie = $imie;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNazwisko(): string
+    {
+        return $this->nazwisko;
+    }
+
+    /**
+     * @param string $nazwisko
+     */
+    public function setNazwisko(string $nazwisko)
+    {
+        $this->nazwisko = $nazwisko;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTelefon(): string
+    {
+        return $this->telefon;
+    }
+
+    /**
+     * @param string $telefon
+     */
+    public function setTelefon(string $telefon)
+    {
+        $this->telefon = $telefon;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPesel(): string
+    {
+        return $this->pesel;
+    }
+
+    /**
+     * @param string $pesel
+     */
+    public function setPesel(string $pesel)
+    {
+        $this->pesel = $pesel;
+    }
+
+    /**
      * @var string
      *
-     * @ORM\Column(name="login", type="string", length=32, unique=true)
+     * @ORM\Column(name="login", type="string", length=32, nullable=false)
      */
     private $login;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="email", type="string", length=255, unique=true)
+     * @ORM\Column(name="email", type="string", length=255, nullable=false)
      */
     private $email;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="haslo", type="string", length=255)
+     * @ORM\Column(name="haslo", type="string", length=255, nullable=false)
      */
     private $haslo;
 
     /**
-     * @var int
+     * @var integer
      *
-     * @ORM\Column(name="idGrupy", type="smallint")
+     * @ORM\Column(name="idGrupy", type="smallint", nullable=false)
      */
-    private $idGrupy;
+    private $idgrupy;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="imie", type="string", length=32)
+     * @ORM\Column(name="imie", type="string", length=32, nullable=false)
      */
     private $imie;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="nazwisko", type="string", length=32)
+     * @ORM\Column(name="nazwisko", type="string", length=32, nullable=false)
      */
     private $nazwisko;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="telefon", type="string", length=9, unique=true)
+     * @ORM\Column(name="telefon", type="string", length=9, nullable=false)
      */
     private $telefon;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="pesel", type="string", length=11, unique=true)
+     * @ORM\Column(name="pesel", type="string", length=11, nullable=false)
      */
     private $pesel;
 
 
-    /**
-     * Get id
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set login
-     *
-     * @param string $login
-     *
-     * @return Uzytkownik
-     */
-    public function setLogin($login)
-    {
-        $this->login = $login;
-
-        return $this;
-    }
-
-    /**
-     * Get login
-     *
-     * @return string
-     */
-    public function getLogin()
-    {
-        return $this->login;
-    }
-
-    /**
-     * Set email
-     *
-     * @param string $email
-     *
-     * @return Uzytkownik
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email
-     *
-     * @return string
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set haslo
-     *
-     * @param string $haslo
-     *
-     * @return Uzytkownik
-     */
-    public function setHaslo($haslo)
-    {
-        $this->haslo = $haslo;
-
-        return $this;
-    }
-
-    /**
-     * Get haslo
-     *
-     * @return string
-     */
-    public function getHaslo()
-    {
-        return $this->haslo;
-    }
-
-    /**
-     * Set idGrupy
-     *
-     * @param integer $idGrupy
-     *
-     * @return Uzytkownik
-     */
-    public function setIdGrupy($idGrupy)
-    {
-        $this->idGrupy = $idGrupy;
-
-        return $this;
-    }
-
-    /**
-     * Get idGrupy
-     *
-     * @return int
-     */
-    public function getIdGrupy()
-    {
-        return $this->idGrupy;
-    }
-
-    /**
-     * Set imie
-     *
-     * @param string $imie
-     *
-     * @return Uzytkownik
-     */
-    public function setImie($imie)
-    {
-        $this->imie = $imie;
-
-        return $this;
-    }
-
-    /**
-     * Get imie
-     *
-     * @return string
-     */
-    public function getImie()
-    {
-        return $this->imie;
-    }
-
-    /**
-     * Set nazwisko
-     *
-     * @param string $nazwisko
-     *
-     * @return Uzytkownik
-     */
-    public function setNazwisko($nazwisko)
-    {
-        $this->nazwisko = $nazwisko;
-
-        return $this;
-    }
-
-    /**
-     * Get nazwisko
-     *
-     * @return string
-     */
-    public function getNazwisko()
-    {
-        return $this->nazwisko;
-    }
-
-    /**
-     * Set telefon
-     *
-     * @param string $telefon
-     *
-     * @return Uzytkownik
-     */
-    public function setTelefon($telefon)
-    {
-        $this->telefon = $telefon;
-
-        return $this;
-    }
-
-    /**
-     * Get telefon
-     *
-     * @return string
-     */
-    public function getTelefon()
-    {
-        return $this->telefon;
-    }
-
-    /**
-     * Set pesel
-     *
-     * @param string $pesel
-     *
-     * @return Uzytkownik
-     */
-    public function setPesel($pesel)
-    {
-        $this->pesel = $pesel;
-
-        return $this;
-    }
-
-    /**
-     * Get pesel
-     *
-     * @return string
-     */
-    public function getPesel()
-    {
-        return $this->pesel;
-    }
 }
 

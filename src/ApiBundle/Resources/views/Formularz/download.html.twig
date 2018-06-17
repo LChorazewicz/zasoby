@@ -1,7 +1,26 @@
-{% extends "::base.html.twig" %}
+{% extends "@Api/base.html.twig" %}
 
-{% block title %}ApiBundle:Formularz:Download{% endblock %}
+{% block title %}
+    <title>Formularz downloadu</title>
+{% endblock %}
 
 {% block body %}
-<h1>Welcome to the Formularz:Download page</h1>
+    {{ form_start(pola) }}
+    <div class="form-group">
+        {{ form_label(pola.login) }}
+        {{ form_widget(pola.login) }}
+
+        {{ form_label(pola.haslo) }}
+        {{ form_widget(pola.haslo) }}
+
+        {{ form_label(pola.token) }}
+        {{ form_widget(pola.token) }}
+
+        {{ form_label(pola.zasob) }}
+        {{ form_widget(pola.zasob) }}
+
+        <br><br>
+        {{ form_widget(pola.pobierz) }}
+    </div>
+    {{ form_end(pola) }}
 {% endblock %}

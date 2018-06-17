@@ -14,7 +14,13 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
 {
     public function czyIstniejeTakiUzytkownik($login)
     {
-        return true;
+        $encja = $this->findOneBy(['login' => $login]);
+
+        if(!$encja instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        return ($encja->getId()) ? true : false;
     }
 
     public function pobierzIdUzytkownikaPoLoginie($login, $haslo)

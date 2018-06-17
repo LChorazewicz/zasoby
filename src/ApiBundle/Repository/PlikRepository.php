@@ -1,6 +1,8 @@
 <?php
 
 namespace ApiBundle\Repository;
+use ApiBundle\Entity\Plik;
+use ApiBundle\Exception\ZasobNieIstniejeException;
 
 /**
  * PlikRepository
@@ -10,4 +12,14 @@ namespace ApiBundle\Repository;
  */
 class PlikRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function pobierzSciezkeDoZasobu($zasob)
+    {
+        $encja = $this->findOneBy(['nazwaZasobu' => $zasob]);
+
+        if(!$encja instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return $encja->getNazwaZasobu();
+    }
 }

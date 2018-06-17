@@ -7,215 +7,197 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Plik
  *
- * @ORM\Table(name="plik")
+ * @ORM\Table(name="plik", indexes={@ORM\Index(name="nazwa_zasobu", columns={"nazwa_zasobu"})})
  * @ORM\Entity(repositoryClass="ApiBundle\Repository\PlikRepository")
  */
 class Plik
 {
     /**
-     * @var int
+     * @var integer
      *
-     * @ORM\Column(name="id", type="integer")
+     * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="sciezka", type="string", length=255, unique=true)
+     * @ORM\Column(name="sciezka", type="string", length=255, nullable=false)
      */
     private $sciezka;
 
     /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId(int $id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSciezka(): string
+    {
+        return $this->sciezka;
+    }
+
+    /**
+     * @param string $sciezka
+     */
+    public function setSciezka(string $sciezka)
+    {
+        $this->sciezka = $sciezka;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPierwotnaNazwa(): string
+    {
+        return $this->pierwotnaNazwa;
+    }
+
+    /**
+     * @param string $pierwotnaNazwa
+     */
+    public function setPierwotnaNazwa(string $pierwotnaNazwa)
+    {
+        $this->pierwotnaNazwa = $pierwotnaNazwa;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRozmiar(): int
+    {
+        return $this->rozmiar;
+    }
+
+    /**
+     * @param int $rozmiar
+     */
+    public function setRozmiar(int $rozmiar)
+    {
+        $this->rozmiar = $rozmiar;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDataDodania(): \DateTime
+    {
+        return $this->dataDodania;
+    }
+
+    /**
+     * @param \DateTime $dataDodania
+     */
+    public function setDataDodania(\DateTime $dataDodania)
+    {
+        $this->dataDodania = $dataDodania;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUzytkownikDodajacy(): int
+    {
+        return $this->uzytkownikDodajacy;
+    }
+
+    /**
+     * @param int $uzytkownikDodajacy
+     */
+    public function setUzytkownikDodajacy(int $uzytkownikDodajacy)
+    {
+        $this->uzytkownikDodajacy = $uzytkownikDodajacy;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCzyUsuniety(): bool
+    {
+        return $this->czyUsuniety;
+    }
+
+    /**
+     * @param bool $czyUsuniety
+     */
+    public function setCzyUsuniety(bool $czyUsuniety)
+    {
+        $this->czyUsuniety = $czyUsuniety;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNazwaZasobu(): string
+    {
+        return $this->nazwaZasobu;
+    }
+
+    /**
+     * @param string $nazwaZasobu
+     */
+    public function setNazwaZasobu(string $nazwaZasobu)
+    {
+        $this->nazwaZasobu = $nazwaZasobu;
+    }
+
+    /**
      * @var string
      *
-     * @ORM\Column(name="pierwotna_nazwa", type="string", length=255)
+     * @ORM\Column(name="pierwotna_nazwa", type="string", length=255, nullable=false)
      */
     private $pierwotnaNazwa;
 
     /**
-     * @var int
+     * @var integer
      *
-     * @ORM\Column(name="rozmiar", type="integer")
+     * @ORM\Column(name="rozmiar", type="integer", nullable=false)
      */
     private $rozmiar;
 
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="data_dodania", type="datetime")
+     * @ORM\Column(name="data_dodania", type="datetime", nullable=false)
      */
     private $dataDodania;
 
     /**
-     * @var int
+     * @var integer
      *
-     * @ORM\Column(name="uzytkownik_dodajacy", type="integer")
+     * @ORM\Column(name="uzytkownik_dodajacy", type="integer", nullable=false)
      */
     private $uzytkownikDodajacy;
 
     /**
-     * @var bool
+     * @var boolean
      *
-     * @ORM\Column(name="czy_usuniety", type="boolean")
+     * @ORM\Column(name="czy_usuniety", type="boolean", nullable=false)
      */
     private $czyUsuniety;
 
-
     /**
-     * Get id
+     * @var string
      *
-     * @return int
+     * @ORM\Column(name="nazwa_zasobu", type="string", length=255, nullable=false)
      */
-    public function getId()
-    {
-        return $this->id;
-    }
+    private $nazwaZasobu;
 
-    /**
-     * Set sciezka
-     *
-     * @param string $sciezka
-     *
-     * @return Plik
-     */
-    public function setSciezka($sciezka)
-    {
-        $this->sciezka = $sciezka;
 
-        return $this;
-    }
-
-    /**
-     * Get sciezka
-     *
-     * @return string
-     */
-    public function getSciezka()
-    {
-        return $this->sciezka;
-    }
-
-    /**
-     * Set pierwotnaNazwa
-     *
-     * @param string $pierwotnaNazwa
-     *
-     * @return Plik
-     */
-    public function setPierwotnaNazwa($pierwotnaNazwa)
-    {
-        $this->pierwotnaNazwa = $pierwotnaNazwa;
-
-        return $this;
-    }
-
-    /**
-     * Get pierwotnaNazwa
-     *
-     * @return string
-     */
-    public function getPierwotnaNazwa()
-    {
-        return $this->pierwotnaNazwa;
-    }
-
-    /**
-     * Set rozmiar
-     *
-     * @param integer $rozmiar
-     *
-     * @return Plik
-     */
-    public function setRozmiar($rozmiar)
-    {
-        $this->rozmiar = $rozmiar;
-
-        return $this;
-    }
-
-    /**
-     * Get rozmiar
-     *
-     * @return int
-     */
-    public function getRozmiar()
-    {
-        return $this->rozmiar;
-    }
-
-    /**
-     * Set dataDodania
-     *
-     * @param \DateTime $dataDodania
-     *
-     * @return Plik
-     */
-    public function setDataDodania($dataDodania)
-    {
-        $this->dataDodania = $dataDodania;
-
-        return $this;
-    }
-
-    /**
-     * Get dataDodania
-     *
-     * @return \DateTime
-     */
-    public function getDataDodania()
-    {
-        return $this->dataDodania;
-    }
-
-    /**
-     * Set uzytkownikDodajacy
-     *
-     * @param integer $uzytkownikDodajacy
-     *
-     * @return Plik
-     */
-    public function setUzytkownikDodajacy($uzytkownikDodajacy)
-    {
-        $this->uzytkownikDodajacy = $uzytkownikDodajacy;
-
-        return $this;
-    }
-
-    /**
-     * Get uzytkownikDodajacy
-     *
-     * @return int
-     */
-    public function getUzytkownikDodajacy()
-    {
-        return $this->uzytkownikDodajacy;
-    }
-
-    /**
-     * Set czyUsuniety
-     *
-     * @param boolean $czyUsuniety
-     *
-     * @return Plik
-     */
-    public function setCzyUsuniety($czyUsuniety)
-    {
-        $this->czyUsuniety = $czyUsuniety;
-
-        return $this;
-    }
-
-    /**
-     * Get czyUsuniety
-     *
-     * @return bool
-     */
-    public function getCzyUsuniety()
-    {
-        return $this->czyUsuniety;
-    }
 }
 

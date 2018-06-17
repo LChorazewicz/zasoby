@@ -57,11 +57,33 @@ class FormularzController extends Controller
 
     /**
      * @Route("/download")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function DownloadAction()
+    public function DownloadAction(Request $request)
     {
-        return $this->render('ApiBundle:Formularz:download.html.twig', array(
-            // ...
+        $formularz = $this->createFormBuilder()
+            ->setAction($this->generateUrl('api_api_getdownload'))
+            ->setMethod('GET')
+            ->add('login', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
+            ])
+            ->add('haslo', PasswordType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Hasło']
+            ])
+            ->add('token', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'f0a6fd0c-62d5-48f1-b06c-325789694d07']
+            ])
+            ->add('zasob', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'bdf3f773-bd88-562e-ab23-f8a4a35b609e']
+            ])
+            ->add('pobierz', SubmitType::class, [
+                'attr' => ['class' => 'btn btn-primary float-right']
+            ])
+            ->getForm();
+
+        return $this->render('@Api/Formularz/download.html.twig', array(
+            'pola' => $formularz->createView()
         ));
     }
 }

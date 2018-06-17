@@ -35,7 +35,7 @@ class PrzetworzDane
      * @return array
      * @throws NiepelneDaneException
      */
-    public function przygotujDaneWejsciowe(Request $request)
+    public function przygotujDaneWejscioweUpload(Request $request)
     {
         $daneWejsciowe = [
             'token' => $request->request->get('form', null)['token'],
@@ -44,6 +44,30 @@ class PrzetworzDane
                 'haslo' => $request->request->get('form', null)['haslo']
             ],
             'plik' => $request->files->get('form', null)['plik'][0]
+        ];
+
+        if (array_search(null, $daneWejsciowe) !== false) {
+            throw new NiepelneDaneException();
+        }
+
+        return $daneWejsciowe;
+    }
+
+
+    /**
+     * @param Request $request
+     * @return array
+     * @throws NiepelneDaneException
+     */
+    public function przygotujDaneWejscioweDownload(Request $request)
+    {
+        $daneWejsciowe = [
+            'token' => $request->query->get('form', null)['token'],
+            'uzytkownik' => [
+                'login' => $request->query->get('form', null)['login'],
+                'haslo' => $request->query->get('form', null)['haslo']
+            ],
+            'zasob' => $request->query->get('form', null)['zasob']
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -63,10 +87,13 @@ class PrzetworzDane
          * @var $plik UploadedFile
          */
         $plik = $aDaneWejsciowe['plik'];
-        $nowaNazwaPliku = (Uuid::uuid5(
-                Uuid::NAMESPACE_DNS,
-                md5(uniqid(rand(), true))
-            ))->toString() . '.' . $plik->getClientOriginalExtension();
+
+        $nazwaZasobu = (Uuid::uuid5(
+            Uuid::NAMESPACE_DNS,
+            md5(uniqid(rand(), true))
+        ))->toString();
+
+        $nowaNazwaPliku = $nazwaZasobu . '.' . $plik->getClientOriginalExtension();
 
         $katalogDoZapisu = $this->container->getParameter('katalog_do_zapisu_plikow') .
             Data::pobierzDzisiejszaDateWFormacieKrotkim();
@@ -77,6 +104,7 @@ class PrzetworzDane
                     'pierwotna' => $plik->getClientOriginalName(),
                     'nowa' => $nowaNazwaPliku
                 ],
+                'nazwa_zasobu' => $nazwaZasobu,
                 'rozmiar' => $plik->getClientSize(),
                 'sciezka_do_katalogu' => $katalogDoZapisu,
                 'data_dodania' => new \DateTime(),
@@ -93,6 +121,7 @@ class PrzetworzDane
     public function uzupelnijEncjePliku(Plik $encjaPliku, $noweDane)
     {
         $encjaPliku->setSciezka($noweDane['plik']['pelna_sciezka_do_pliku']);
+        $encjaPliku->setNazwaZasobu($noweDane['plik']['nazwa_zasobu']);
         $encjaPliku->setPierwotnaNazwa($noweDane['plik']['nazwa']['pierwotna']);
         $encjaPliku->setRozmiar($noweDane['plik']['rozmiar']);
         $encjaPliku->setDataDodania($noweDane['plik']['data_dodania']);
