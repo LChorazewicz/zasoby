@@ -14,12 +14,12 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
 {
     public function pobierzSciezkeDoZasobu($zasob)
     {
-        $encja = $this->findOneBy(['nazwaZasobu' => $zasob]);
+        $encja = $this->findOneBy(['idZasobu' => $zasob]);
 
         if(!$encja instanceof Plik){
             throw new ZasobNieIstniejeException();
         }
 
-        return $encja->getNazwaZasobu();
+        return $encja->getSciezka();
     }
 }

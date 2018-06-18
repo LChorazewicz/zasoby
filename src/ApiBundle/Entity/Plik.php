@@ -29,6 +29,64 @@ class Plik
     private $sciezka;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="mime_type", type="string", length=16, nullable=false)
+     */
+    private $mimeType;
+
+    /**
+     * @return string
+     */
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pierwotna_nazwa", type="string", length=255, nullable=false)
+     */
+    private $pierwotnaNazwa;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="rozmiar", type="integer", nullable=false)
+     */
+    private $rozmiar;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="data_dodania", type="datetime", nullable=false)
+     */
+    private $dataDodania;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="uzytkownik_dodajacy", type="integer", nullable=false)
+     */
+    private $uzytkownikDodajacy;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="czy_usuniety", type="boolean", nullable=false)
+     */
+    private $czyUsuniety;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="nazwa_zasobu", type="string", length=255, nullable=false)
+     */
+    private $nazwaZasobu;
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="id_zasobu", type="string", nullable=false, length=255)
+     */
+    private $idZasobu;
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -156,48 +214,15 @@ class Plik
         $this->nazwaZasobu = $nazwaZasobu;
     }
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="pierwotna_nazwa", type="string", length=255, nullable=false)
-     */
-    private $pierwotnaNazwa;
+    public function setMimeType($mime_type)
+    {
+        $this->mimeType = $mime_type;
+    }
 
-    /**
-     * @var integer
-     *
-     * @ORM\Column(name="rozmiar", type="integer", nullable=false)
-     */
-    private $rozmiar;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="data_dodania", type="datetime", nullable=false)
-     */
-    private $dataDodania;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(name="uzytkownik_dodajacy", type="integer", nullable=false)
-     */
-    private $uzytkownikDodajacy;
-
-    /**
-     * @var boolean
-     *
-     * @ORM\Column(name="czy_usuniety", type="boolean", nullable=false)
-     */
-    private $czyUsuniety;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="nazwa_zasobu", type="string", length=255, nullable=false)
-     */
-    private $nazwaZasobu;
-
+    public function setIdZasobu($id_zasobu)
+    {
+        $this->idZasobu = $id_zasobu;
+    }
 
 }
 

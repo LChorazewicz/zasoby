@@ -18,6 +18,7 @@ use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use FOS\RestBundle\Controller\FOSRestController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -55,7 +56,7 @@ class ApiController extends FOSRestController
             );
 
             $fizycznyPlik->zapiszPlikNaDysku(
-                $daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu'], $noweDane['plik']['nazwa']['nowa']
+                $daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu_na_dysku'], $noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']
             );
 
             $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $noweDane);
@@ -81,7 +82,7 @@ class ApiController extends FOSRestController
 
         return $this->handleView($this->view([
             'status' => 1,
-            'sciezka_do_zasobu' => $noweDane['plik']['pelna_sciezka_do_pliku']
+            'sciezka_do_zasobu' => $noweDane['plik']['id_zasobu']
         ], Response::HTTP_CREATED));
     }
 
@@ -94,7 +95,6 @@ class ApiController extends FOSRestController
     {
         try{
             $przetworzDane = new PrzetworzDane($this->container);
-            $encjaPliku = new Plik();
             /**
              * @var $uzytkownik UzytkownikRepository
              */
@@ -113,7 +113,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['zasob']);
+            $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
@@ -128,12 +128,6 @@ class ApiController extends FOSRestController
         } catch (UzytkownikNieIstniejeException $exception) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
         }
-        return $this->handleView($this->view([
-            'status' => 1,
-            'sciezka_do_zasobu' => $sciezkaDoZasobu
-        ], Response::HTTP_FOUND));
+        return new BinaryFileResponse($sciezkaDoZasobu);
     }
-//pomyslec o kolumnie id_zasobu (zwracane przy tworzeniu i szukaniu)
-//   i sciezka_do_zasobu (ktora zwraca faktyczna sciezke do zasobu na serwerze)
-
 }

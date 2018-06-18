@@ -67,7 +67,7 @@ class PrzetworzDane
                 'login' => $request->query->get('form', null)['login'],
                 'haslo' => $request->query->get('form', null)['haslo']
             ],
-            'zasob' => $request->query->get('form', null)['zasob']
+            'id_zasobu' => $request->query->get('form', null)['id_zasobu']
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -88,28 +88,34 @@ class PrzetworzDane
          */
         $plik = $aDaneWejsciowe['plik'];
 
-        $nazwaZasobu = (Uuid::uuid5(
+        $nazwaZasobuNaDysku = (Uuid::uuid5(
             Uuid::NAMESPACE_DNS,
             md5(uniqid(rand(), true))
         ))->toString();
 
-        $nowaNazwaPliku = $nazwaZasobu . '.' . $plik->getClientOriginalExtension();
+        $idZasobu = (Uuid::uuid5(
+            Uuid::NAMESPACE_DNS,
+            md5(uniqid(rand(), true))
+        ))->toString();
+
+        $nowaNazwaPlikuNaDysku = $nazwaZasobuNaDysku . '.' . $plik->getClientOriginalExtension();
 
         $katalogDoZapisu = $this->container->getParameter('katalog_do_zapisu_plikow') .
-            Data::pobierzDzisiejszaDateWFormacieKrotkim();
+            Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/';
 
         return [
             'plik' => [
                 'nazwa' => [
-                    'pierwotna' => $plik->getClientOriginalName(),
-                    'nowa' => $nowaNazwaPliku
+                    'pierwotna_z_rozszerzeniem' => $plik->getClientOriginalName(),
+                    'nowa_z_rozszerzeniem' => $nowaNazwaPlikuNaDysku,
+                    'nowa_bez_rozszerzenia' => $nazwaZasobuNaDysku
                 ],
-                'nazwa_zasobu' => $nazwaZasobu,
+                'id_zasobu' =>  $idZasobu,
                 'rozmiar' => $plik->getClientSize(),
-                'sciezka_do_katalogu' => $katalogDoZapisu,
+                'sciezka_do_katalogu_na_dysku' => $katalogDoZapisu,
+                'sciezka_do_zasobu_na_dysku' => $katalogDoZapisu . $nowaNazwaPlikuNaDysku,
                 'data_dodania' => new \DateTime(),
-                'mimeType' => $plik->getClientMimeType(),
-                'pelna_sciezka_do_pliku' => $katalogDoZapisu . '/' . $nowaNazwaPliku
+                'mime_type' => $plik->getClientMimeType()
             ],
             'uzytkownik' => [
                 'id' => null,
@@ -120,12 +126,14 @@ class PrzetworzDane
 
     public function uzupelnijEncjePliku(Plik $encjaPliku, $noweDane)
     {
-        $encjaPliku->setSciezka($noweDane['plik']['pelna_sciezka_do_pliku']);
-        $encjaPliku->setNazwaZasobu($noweDane['plik']['nazwa_zasobu']);
-        $encjaPliku->setPierwotnaNazwa($noweDane['plik']['nazwa']['pierwotna']);
+        $encjaPliku->setSciezka($noweDane['plik']['sciezka_do_zasobu_na_dysku']);
+        $encjaPliku->setNazwaZasobu($noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']);
+        $encjaPliku->setPierwotnaNazwa($noweDane['plik']['nazwa']['pierwotna_z_rozszerzeniem']);
         $encjaPliku->setRozmiar($noweDane['plik']['rozmiar']);
         $encjaPliku->setDataDodania($noweDane['plik']['data_dodania']);
         $encjaPliku->setUzytkownikDodajacy($noweDane['uzytkownik']['id']);
+        $encjaPliku->setMimeType($noweDane['plik']['mime_type']);
+        $encjaPliku->setIdZasobu($noweDane['plik']['id_zasobu']);
         $encjaPliku->setCzyUsuniety(false);
         return $encjaPliku;
     }
