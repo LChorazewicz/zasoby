@@ -1,8 +1,10 @@
 <?php
 
 namespace ApiBundle\Repository;
+use ApiBundle\Entity\Plik;
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
+use ApiBundle\Exception\ZasobNieIstniejeException;
 
 /**
  * UzytkownikRepository
@@ -35,5 +37,25 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
         }
 
         return $encja->getId();
+    }
+
+    public function czyUzytkownikMozeUsunacZasob($id_uzytkownik, $id_zasobu)
+    {
+        /**
+         * @var $id Uzytkownik
+         */
+        $uzytkownik = $this->findOneBy(['id' => $id_uzytkownik]);
+
+        if(!$uzytkownik instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu]);
+
+        if(!$zasob instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
     }
 }

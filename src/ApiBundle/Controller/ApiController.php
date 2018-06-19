@@ -25,12 +25,12 @@ use Symfony\Component\HttpFoundation\Response;
 class ApiController extends FOSRestController
 {
     /**
-     * @Route("/Upload")
+     * @Route("/zasob", methods={"POST"})
      * @param Request $request
      * @return Response
      * @throws UzytkownikNieIstniejeException
      */
-    public function getUploadAction(Request $request)
+    public function postZasobAction(Request $request)
     {
         try {
             $przetworzDane = new PrzetworzDane($this->container);
@@ -55,7 +55,7 @@ class ApiController extends FOSRestController
             );
 
             $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe, $noweDane);
-            $plikRepository->zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, $przetworzDane);
+            $plikRepository->zapiszInformacjeOPlikuWBazie($noweDane, $przetworzDane);
 
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
@@ -80,11 +80,11 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @Route("/Download")
+     * @Route("/zasob", methods={"GET"})
      * @param Request $request
      * @return Response
      */
-    public function getDownloadAction(Request $request)
+    public function getZasobAction(Request $request)
     {
         try{
             $przetworzDane = new PrzetworzDane($this->container);
@@ -128,5 +128,56 @@ class ApiController extends FOSRestController
             return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
         }
         return new BinaryFileResponse($sciezkaDoZasobu);
+    }
+
+    /**
+     * @Route("/zasob", methods={"GET", "DELETE"})
+     * @param Request $request
+     * @return Response
+     */
+    public function deleteZasobAction(Request $request)
+    {
+        try{
+            $przetworzDane = new PrzetworzDane($this->container);
+            /**
+             * @var $uzytkownik UzytkownikRepository
+             */
+            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+            /**
+             * @var $plikRepository PlikRepository
+             */
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+            $daneWejsciowe = $przetworzDane->przygotujDaneWejscioweDelete($request);
+
+            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe['uzytkownik']['login'])) {
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $noweDane['uzytkownik']['id'] = $uzytkownik->pobierzIdUzytkownikaPoLoginie(
+                $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
+            );
+
+            if(!$uzytkownik->czyUzytkownikMozeUsunacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $plikRepository->usunMiekkoPlik($daneWejsciowe['id_zasobu']);
+
+        } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+        } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+        } catch (NiepelneDaneException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+        } catch (BrakLacznosciZBazaException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        } catch (UzytkownikNieIstniejeException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        }
+        return $this->handleView($this->view([
+            'status' => 1
+        ], Response::HTTP_ACCEPTED));
     }
 }

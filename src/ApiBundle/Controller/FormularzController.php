@@ -26,7 +26,7 @@ class FormularzController extends Controller
     public function UploadAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_getupload'))
+            ->setAction($this->generateUrl('api_api_postzasob'))
             ->setMethod('POST')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -63,7 +63,7 @@ class FormularzController extends Controller
     public function DownloadAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_getdownload'))
+            ->setAction($this->generateUrl('api_api_getzasob'))
             ->setMethod('GET')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -88,11 +88,34 @@ class FormularzController extends Controller
     }
 
     /**
-     * @Route("/test")
+     * @Route("/delete")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function TestAction()
+    public function DeleteAction(Request $request)
     {
-        var_dump(ini_get('max_file_uploads'));
-        var_dump(ini_get('upload_max_filesize'));
+        $formularz = $this->createFormBuilder()
+            ->setAction($this->generateUrl('api_api_deletezasob'))
+            ->setMethod('DELETE')
+            ->add('login', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
+            ])
+            ->add('haslo', PasswordType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Hasło']
+            ])
+            ->add('token', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'f0a6fd0c-62d5-48f1-b06c-325789694d07']
+            ])
+            ->add('id_zasobu', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'bdf3f773-bd88-562e-ab23-f8a4a35b609e']
+            ])
+            ->add('usun', SubmitType::class, [
+                'attr' => ['class' => 'btn btn-primary float-right']
+            ])
+            ->getForm();
+
+        return $this->render('@Api/Formularz/delete.html.twig', array(
+            'pola' => $formularz->createView()
+        ));
     }
 }

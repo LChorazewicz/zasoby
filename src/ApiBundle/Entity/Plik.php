@@ -121,6 +121,22 @@ class Plik
     /**
      * @return string
      */
+    public function getMimeType(): string
+    {
+        return $this->mimeType;
+    }
+
+    /**
+     * @param string $mimeType
+     */
+    public function setMimeType(string $mimeType)
+    {
+        $this->mimeType = $mimeType;
+    }
+
+    /**
+     * @return string
+     */
     public function getPierwotnaNazwa(): string
     {
         return $this->pierwotnaNazwa;
@@ -214,14 +230,20 @@ class Plik
         $this->nazwaZasobu = $nazwaZasobu;
     }
 
-    public function setMimeType($mime_type)
+    /**
+     * @return string
+     */
+    public function getIdZasobu(): string
     {
-        $this->mimeType = $mime_type;
+        return $this->idZasobu;
     }
 
-    public function setIdZasobu($id_zasobu)
+    /**
+     * @param string $idZasobu
+     */
+    public function setIdZasobu(string $idZasobu)
     {
-        $this->idZasobu = $id_zasobu;
+        $this->idZasobu = $idZasobu;
     }
 
 }
