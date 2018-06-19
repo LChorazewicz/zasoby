@@ -72,4 +72,9 @@ class FizycznyPlik
 
         $plik->move($katalog, $nazwa);
     }
+
+    public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)
+    {
+        return file_exists($sciezkaDoZasobu);
+    }
 }

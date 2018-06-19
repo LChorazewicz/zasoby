@@ -116,6 +116,12 @@ class ApiController extends FOSRestController
 
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
+            $plikFizyczny = new FizycznyPlik("");
+
+            if(!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)){
+                throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
+            }
+
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
         } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
