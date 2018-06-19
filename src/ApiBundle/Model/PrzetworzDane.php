@@ -144,4 +144,21 @@ class PrzetworzDane
         ))->toString();
     }
 
+
+    /**
+     * @param $noweDane
+     * @return array
+     */
+    public function pobierzIdWszystkichZasobowDlaTegoZadania($noweDane): array
+    {
+        $zasoby = [];
+        foreach ($noweDane['pliki'] as $plik) {
+            $zasoby[] = [
+                'id_zasobu' => $plik['id_zasobu'],
+                'pierwotna_nazwa' => $plik['nazwa']['pierwotna_z_rozszerzeniem']
+            ];
+        }
+        return $zasoby;
+    }
+
 }

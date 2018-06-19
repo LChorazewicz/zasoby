@@ -33,7 +33,6 @@ class ApiController extends FOSRestController
     public function getUploadAction(Request $request)
     {
         try {
-
             $przetworzDane = new PrzetworzDane($this->container);
             $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
             $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
@@ -58,14 +57,7 @@ class ApiController extends FOSRestController
             $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe, $noweDane);
             $plikRepository->zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, $przetworzDane);
 
-            $zasoby = [];
-
-            foreach ($noweDane['pliki'] as $plik){
-                $zasoby[] = [
-                    'id_zasobu' => $plik['id_zasobu'],
-                    'pierwotna_nazwa' => $plik['nazwa']['pierwotna_z_rozszerzeniem']
-                ];
-            }
+            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
