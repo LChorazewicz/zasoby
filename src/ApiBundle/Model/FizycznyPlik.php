@@ -25,24 +25,20 @@ class FizycznyPlik
 
 
     /**
-     * @param UploadedFile $plik
-     * @param $sciezka
-     * @param $nazwa
+     * @param $daneWejsciowe
+     * @param $noweDane
      * @throws BladZapisuPlikuNaDyskuException
-     * @throws RozmiarPlikuJestZbytDuzyException
+     * @internal param UploadedFile $plik
      */
-    public function zapiszPlikNaDysku(UploadedFile $plik, $sciezka, $nazwa)
-    {
+    public function zapiszPlikNaDysku($daneWejsciowe, $noweDane)
+    {//$daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu_na_dysku'], $noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']
         try {
-            /**
-             * File getSize zwraca rozmiar pliku w kilobajtach
-             */
-            if ($plik->getSize() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
-                throw new RozmiarPlikuJestZbytDuzyException;
+            $i = 0;
+            foreach ($daneWejsciowe['pliki'] as $plik){
+                $this->zapiszPlik($plik, $noweDane['pliki'][$i]['sciezka_do_katalogu_na_dysku'], $noweDane['pliki'][$i]['nazwa']['nowa_z_rozszerzeniem']);
+                $i++;
             }
-            $katalog = $this->przygotujKatalogDoZapisu($sciezka);
 
-            $plik->move($katalog, $nazwa);
 
         } catch (FileException $exception) {
             throw new BladZapisuPlikuNaDyskuException;
@@ -59,5 +55,21 @@ class FizycznyPlik
             mkdir($nazwaKatalogu, 0777, true);
         }
         return $nazwaKatalogu;
+    }
+
+    /**
+     * @param UploadedFile $plik
+     * @param $sciezka
+     * @param $nazwa
+     * @throws RozmiarPlikuJestZbytDuzyException
+     */
+    private function zapiszPlik(UploadedFile $plik, $sciezka, $nazwa): void
+    {
+        if ($plik->getSize() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
+            throw new RozmiarPlikuJestZbytDuzyException;
+        }
+        $katalog = $this->przygotujKatalogDoZapisu($sciezka);
+
+        $plik->move($katalog, $nazwa);
     }
 }

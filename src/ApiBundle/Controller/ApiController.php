@@ -35,8 +35,8 @@ class ApiController extends FOSRestController
         try {
 
             $przetworzDane = new PrzetworzDane($this->container);
-            $encjaPliku = new Plik();
             $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
 
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -55,16 +55,17 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            $fizycznyPlik->zapiszPlikNaDysku(
-                $daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu_na_dysku'], $noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']
-            );
+            $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe, $noweDane);
+            $plikRepository->zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, $przetworzDane);
 
-            $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $noweDane);
+            $zasoby = [];
 
-            $managerEncji = $this->getDoctrine()->getManager();
-
-            $managerEncji->persist($encjaPliku);
-            $managerEncji->flush();
+            foreach ($noweDane['pliki'] as $plik){
+                $zasoby[] = [
+                    'id_zasobu' => $plik['id_zasobu'],
+                    'pierwotna_nazwa' => $plik['nazwa']['pierwotna_z_rozszerzeniem']
+                ];
+            }
 
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
@@ -82,7 +83,7 @@ class ApiController extends FOSRestController
 
         return $this->handleView($this->view([
             'status' => 1,
-            'id_zasobu' => $noweDane['plik']['id_zasobu']
+            'zasoby' => $zasoby
         ], Response::HTTP_CREATED));
     }
 

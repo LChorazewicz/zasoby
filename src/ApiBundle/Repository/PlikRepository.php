@@ -3,6 +3,8 @@
 namespace ApiBundle\Repository;
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\ZasobNieIstniejeException;
+use ApiBundle\Model\FizycznyPlik;
+use ApiBundle\Model\PrzetworzDane;
 
 /**
  * PlikRepository
@@ -21,5 +23,21 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
         }
 
         return $encja->getSciezka();
+    }
+
+    /**
+     * @param $noweDane
+     * @param $przetworzDane
+     */
+    public function zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, PrzetworzDane $przetworzDane): void
+    {
+        $managerEncji = $this->getEntityManager();
+
+        foreach ($noweDane['pliki'] as $danePliku){
+            $encjaPliku = new Plik();
+            $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $danePliku, $noweDane['uzytkownik']);
+            $managerEncji->persist($encjaPliku);
+            $managerEncji->flush();
+        }
     }
 }
