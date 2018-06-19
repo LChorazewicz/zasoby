@@ -82,7 +82,7 @@ class ApiController extends FOSRestController
 
         return $this->handleView($this->view([
             'status' => 1,
-            'sciezka_do_zasobu' => $noweDane['plik']['id_zasobu']
+            'id_zasobu' => $noweDane['plik']['id_zasobu']
         ], Response::HTTP_CREATED));
     }
 

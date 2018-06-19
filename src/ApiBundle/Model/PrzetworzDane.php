@@ -88,15 +88,16 @@ class PrzetworzDane
          */
         $plik = $aDaneWejsciowe['plik'];
 
+        $idZasobu = (Uuid::uuid5(
+            Uuid::NAMESPACE_DNS,
+            md5(uniqid(rand(), true))
+        ))->toString();
+
         $nazwaZasobuNaDysku = (Uuid::uuid5(
             Uuid::NAMESPACE_DNS,
             md5(uniqid(rand(), true))
         ))->toString();
 
-        $idZasobu = (Uuid::uuid5(
-            Uuid::NAMESPACE_DNS,
-            md5(uniqid(rand(), true))
-        ))->toString();
 
         $nowaNazwaPlikuNaDysku = $nazwaZasobuNaDysku . '.' . $plik->getClientOriginalExtension();
 

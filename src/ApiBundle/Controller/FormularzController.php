@@ -8,6 +8,7 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -40,7 +41,6 @@ class FormularzController extends Controller
                 'label_attr' => ['class' => 'custom-file-label'],
                 'multiple' => true,
                 'attr' => [
-                    'accept' => 'image/*',
                     'multiple' => 'multiple',
                     'class' => 'custom-file-input'
                 ]
@@ -85,5 +85,14 @@ class FormularzController extends Controller
         return $this->render('@Api/Formularz/download.html.twig', array(
             'pola' => $formularz->createView()
         ));
+    }
+
+    /**
+     * @Route("/test")
+     */
+    public function TestAction()
+    {
+        var_dump(ini_get('max_file_uploads'));
+        var_dump(ini_get('upload_max_filesize'));
     }
 }
