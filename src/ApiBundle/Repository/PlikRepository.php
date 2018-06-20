@@ -25,6 +25,11 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
         return $encja->getSciezka();
     }
 
+    public function zmodyfikujZasob($idZasobu, $elementyDoZmiany)
+    {
+
+    }
+
     /**
      * @param $noweDane
      * @param $przetworzDane

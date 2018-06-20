@@ -184,4 +184,37 @@ class PrzetworzDane
         return $daneWejsciowe;
     }
 
+    /**
+     * @param $request
+     * @return array
+     * @throws NiepelneDaneException
+     */
+    public function przygotujDaneWejsciowePut($request)
+    {
+        $daneWejsciowe = [
+            'token' => $request->request->get('form', null)['token'],
+            'uzytkownik' => [
+                'login' => $request->request->get('form', null)['login'],
+                'haslo' => $request->request->get('form', null)['haslo']
+            ],
+            'id_zasobu' => $request->request->get('form', null)['id_zasobu']
+        ];
+
+        if (array_search(null, $daneWejsciowe) !== false) {
+            throw new NiepelneDaneException();
+        }
+
+        array_merge($daneWejsciowe, [
+            'elementy_do_zmiany' => [
+                'pierwotna_nazwa' => $request->request->get('form', null)['pierwotna_nazwa'],
+                'czy_usuniety' => $request->request->get('form', null)['czy_usuniety']
+            ]]);
+
+        if(empty(array_filter($daneWejsciowe['elementy_do_zmiany']))){
+            throw new NiepelneDaneException();
+        }
+
+        return $daneWejsciowe;
+    }
+
 }

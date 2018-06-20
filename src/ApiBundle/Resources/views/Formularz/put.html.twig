@@ -1,0 +1,32 @@
+{% extends "@Api/base.html.twig" %}
+
+{% block title %}
+    <title>Formularz downloadu</title>
+{% endblock %}
+
+{% block body %}
+    {{ form_start(pola) }}
+    <div class="form-group">
+        {{ form_label(pola.login) }}
+        {{ form_widget(pola.login) }}
+
+        {{ form_label(pola.haslo) }}
+        {{ form_widget(pola.haslo) }}
+
+        {{ form_label(pola.token) }}
+        {{ form_widget(pola.token) }}
+
+        {{ form_label(pola.id_zasobu) }}
+        {{ form_widget(pola.id_zasobu) }}
+
+        {{ form_label(pola.pierwotna_nazwa) }}
+        {{ form_widget(pola.pierwotna_nazwa) }}
+
+        {{ form_label(pola.czy_usuniety) }}
+        {{ form_widget(pola.czy_usuniety) }}
+
+        <br><br>
+        {{ form_widget(pola.aktualizuj) }}
+    </div>
+    {{ form_end(pola) }}
+{% endblock %}

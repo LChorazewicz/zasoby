@@ -50,7 +50,7 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
             throw new UzytkownikNieIstniejeException();
         }
 
-        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu]);
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
 
         if(!$zasob instanceof Plik){
             throw new ZasobNieIstniejeException();
@@ -58,4 +58,25 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
 
         return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
     }
+
+    public function czyUzytkownikMozeEdytowacZasob($id_uzytkownik, $id_zasobu)
+    {
+        /**
+         * @var $id Uzytkownik
+         */
+        $uzytkownik = $this->findOneBy(['id' => $id_uzytkownik]);
+
+        if(!$uzytkownik instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
+
+        if(!$zasob instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
+    }
+
 }
