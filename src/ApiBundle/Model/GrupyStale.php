@@ -13,4 +13,5 @@ class GrupyStale
 {
     const ADNMISTRATOR = 1;
     const UZYTKOWNIK = 2;
+    const GOSC = 3;
 }

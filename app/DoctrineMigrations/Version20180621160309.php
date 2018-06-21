@@ -15,7 +15,11 @@ class Version20180621160309 extends AbstractMigration
      */
     public function up(Schema $schema)
     {
-        $this->addSql("INSERT INTO `grupy` (`id`, `nazwa`, `uprawnienia`, `status`) VALUES ('1', 'ADMINSITRATO', '{}', '1'), ('2', 'UZYTKOWNIK', '{}', '1')");
+        $this->addSql("INSERT INTO `grupy` (`id`, `nazwa`, `uprawnienia`, `status`) VALUES 
+                      ('1', 'ADMINSITRATO', '{}', '1'), 
+                      ('2', 'UZYTKOWNIK', '{}', '1'),
+                      ('3', 'GOSC', '{}', '1');
+        ");
     }
 
     /**
@@ -23,6 +27,6 @@ class Version20180621160309 extends AbstractMigration
      */
     public function down(Schema $schema)
     {
-        $this->addSql("DELETE FROM `grupy` WHERE `grupy`.`id` IN (1,2);");
+        $this->addSql("DELETE FROM `grupy` WHERE `grupy`.`id` IN (1,3);");
     }
 }

@@ -232,7 +232,8 @@ class ApiController extends FOSRestController
             return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
         }
         return $this->handleView($this->view([
-            'status' => 1
+            'status' => 1,
+            'id_zasobu' => $daneWejsciowe['id_zasobu']
         ], Response::HTTP_ACCEPTED));
     }
 }
