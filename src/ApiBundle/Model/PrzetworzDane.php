@@ -204,11 +204,10 @@ class PrzetworzDane
             throw new NiepelneDaneException();
         }
 
-        array_merge($daneWejsciowe, [
-            'elementy_do_zmiany' => [
-                'pierwotna_nazwa' => $request->request->get('form', null)['pierwotna_nazwa'],
-                'czy_usuniety' => $request->request->get('form', null)['czy_usuniety']
-            ]]);
+        $daneWejsciowe['elementy_do_zmiany'] = [
+            'pierwotna_nazwa' => $request->request->get('form', null)['pierwotna_nazwa'],
+            'czy_usuniety' => $request->request->get('form', null)['czy_usuniety']
+        ];
 
         if(empty(array_filter($daneWejsciowe['elementy_do_zmiany']))){
             throw new NiepelneDaneException();

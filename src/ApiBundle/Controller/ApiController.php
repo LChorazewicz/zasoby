@@ -106,6 +106,10 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
+            if(!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
             $plikFizyczny = new FizycznyPlik("");
@@ -212,7 +216,7 @@ class ApiController extends FOSRestController
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $plikRepository->zmodyfikujZasob($daneWejsciowe['id_zasobu'], []);
+            $plikRepository->zmodyfikujZasob($daneWejsciowe['id_zasobu'], $daneWejsciowe['elementy_do_zmiany']);
 
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));

@@ -79,4 +79,21 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
         return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
     }
 
+    public function czyUzytkownikMozePobracZasob($id_uzytkownika, $id_zasobu)
+    {
+        $uzytkownik = $this->findOneBy(['id' => $id_uzytkownika]);
+
+        if(!$uzytkownik instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
+
+        if(!$zasob instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
+    }
+
 }
