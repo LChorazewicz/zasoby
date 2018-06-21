@@ -4,10 +4,13 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-        public: false
+        public: true
 
     ApiBundle\Controller\:
         resource: '../../src/ApiBundle/Controller'
         public: true
         tags: ['controller.service_arguments']
 
+    api.email:
+        class: ApiBundle\Utils\Mailer
+        arguments: ['@service_container']

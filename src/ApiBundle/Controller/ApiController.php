@@ -59,6 +59,9 @@ class ApiController extends FOSRestController
 
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
+            $email = $this->get('api.email');
+            $email->wyslijEmaila("Upload plików", $this->getParameter('mailer_user'), $this->getParameter('odbiorca_emailow'), "Upload");
+
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {

@@ -8,10 +8,12 @@ parameters:
     mailer_transport: smtp
     mailer_host: 127.0.0.1
     mailer_user: ~
+    odbiorca_emailow: ~
     mailer_password: ~
-
+    auth_mode:  login
     secret: ThisTokenIsNotSoSecretChangeIt
 
 
     katalog_do_zapisu_plikow: /var/www/zasoby/var/upload/
     maksymalny_rozmiar_pliku_w_megabajtach: 2
+    produkcja: false
