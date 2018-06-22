@@ -43,7 +43,7 @@ class PrzetworzDane
                 'login' => $request->request->get('form', null)['login'],
                 'haslo' => $request->request->get('form', null)['haslo']
             ],
-            'plik' => $request->files->get('form', null)['plik'][0]
+            'pliki' => $request->files->get('form', null)['plik']
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -83,29 +83,20 @@ class PrzetworzDane
      */
     public function przetworzDaneWejsciowe($aDaneWejsciowe)
     {
+        $odpowiedz = [];
+
         /**
          * @var $plik UploadedFile
          */
-        $plik = $aDaneWejsciowe['plik'];
+        foreach ($aDaneWejsciowe['pliki'] as $plik){
+            $idZasobu = $this->generujUnikalnyIdentyfikator();
+            $nazwaZasobuNaDysku = $this->generujUnikalnyIdentyfikator();
 
-        $idZasobu = (Uuid::uuid5(
-            Uuid::NAMESPACE_DNS,
-            md5(uniqid(rand(), true))
-        ))->toString();
+            $nowaNazwaPlikuNaDysku = $nazwaZasobuNaDysku . '.' . $plik->getClientOriginalExtension();
+            $katalogDoZapisu = $this->container->getParameter('katalog_do_zapisu_plikow') .
+                Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/';
 
-        $nazwaZasobuNaDysku = (Uuid::uuid5(
-            Uuid::NAMESPACE_DNS,
-            md5(uniqid(rand(), true))
-        ))->toString();
-
-
-        $nowaNazwaPlikuNaDysku = $nazwaZasobuNaDysku . '.' . $plik->getClientOriginalExtension();
-
-        $katalogDoZapisu = $this->container->getParameter('katalog_do_zapisu_plikow') .
-            Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/';
-
-        return [
-            'plik' => [
+            $odpowiedz['pliki'][] = [
                 'nazwa' => [
                     'pierwotna_z_rozszerzeniem' => $plik->getClientOriginalName(),
                     'nowa_z_rozszerzeniem' => $nowaNazwaPlikuNaDysku,
@@ -117,26 +108,57 @@ class PrzetworzDane
                 'sciezka_do_zasobu_na_dysku' => $katalogDoZapisu . $nowaNazwaPlikuNaDysku,
                 'data_dodania' => new \DateTime(),
                 'mime_type' => $plik->getClientMimeType()
-            ],
-            'uzytkownik' => [
-                'id' => null,
-                'login' => $aDaneWejsciowe['uzytkownik']['login']
-            ]
+            ];
+        }
+
+        $odpowiedz['uzytkownik'] = [
+            'id' => null,
+            'login' => $aDaneWejsciowe['uzytkownik']['login']
         ];
+
+        return $odpowiedz;
     }
 
-    public function uzupelnijEncjePliku(Plik $encjaPliku, $noweDane)
+    public function uzupelnijEncjePliku(Plik $encjaPliku, $noweDane, $uzytkownik)
     {
-        $encjaPliku->setSciezka($noweDane['plik']['sciezka_do_zasobu_na_dysku']);
-        $encjaPliku->setNazwaZasobu($noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']);
-        $encjaPliku->setPierwotnaNazwa($noweDane['plik']['nazwa']['pierwotna_z_rozszerzeniem']);
-        $encjaPliku->setRozmiar($noweDane['plik']['rozmiar']);
-        $encjaPliku->setDataDodania($noweDane['plik']['data_dodania']);
-        $encjaPliku->setUzytkownikDodajacy($noweDane['uzytkownik']['id']);
-        $encjaPliku->setMimeType($noweDane['plik']['mime_type']);
-        $encjaPliku->setIdZasobu($noweDane['plik']['id_zasobu']);
+        $encjaPliku->setSciezka($noweDane['sciezka_do_zasobu_na_dysku']);
+        $encjaPliku->setNazwaZasobu($noweDane['nazwa']['nowa_z_rozszerzeniem']);
+        $encjaPliku->setPierwotnaNazwa($noweDane['nazwa']['pierwotna_z_rozszerzeniem']);
+        $encjaPliku->setRozmiar($noweDane['rozmiar']);
+        $encjaPliku->setDataDodania($noweDane['data_dodania']);
+        $encjaPliku->setUzytkownikDodajacy($uzytkownik['id']);
+        $encjaPliku->setMimeType($noweDane['mime_type']);
+        $encjaPliku->setIdZasobu($noweDane['id_zasobu']);
         $encjaPliku->setCzyUsuniety(false);
         return $encjaPliku;
+    }
+
+    /**
+     * @return string
+     */
+    private function generujUnikalnyIdentyfikator(): string
+    {
+        return (Uuid::uuid5(
+            Uuid::NAMESPACE_DNS,
+            md5(uniqid(rand(), true))
+        ))->toString();
+    }
+
+
+    /**
+     * @param $noweDane
+     * @return array
+     */
+    public function pobierzIdWszystkichZasobowDlaTegoZadania($noweDane): array
+    {
+        $zasoby = [];
+        foreach ($noweDane['pliki'] as $plik) {
+            $zasoby[] = [
+                'id_zasobu' => $plik['id_zasobu'],
+                'pierwotna_nazwa' => $plik['nazwa']['pierwotna_z_rozszerzeniem']
+            ];
+        }
+        return $zasoby;
     }
 
 }

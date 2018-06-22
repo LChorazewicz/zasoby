@@ -33,10 +33,9 @@ class ApiController extends FOSRestController
     public function getUploadAction(Request $request)
     {
         try {
-
             $przetworzDane = new PrzetworzDane($this->container);
-            $encjaPliku = new Plik();
             $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
 
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -55,16 +54,10 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            $fizycznyPlik->zapiszPlikNaDysku(
-                $daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu_na_dysku'], $noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']
-            );
+            $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe, $noweDane);
+            $plikRepository->zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, $przetworzDane);
 
-            $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $noweDane);
-
-            $managerEncji = $this->getDoctrine()->getManager();
-
-            $managerEncji->persist($encjaPliku);
-            $managerEncji->flush();
+            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
@@ -82,7 +75,7 @@ class ApiController extends FOSRestController
 
         return $this->handleView($this->view([
             'status' => 1,
-            'id_zasobu' => $noweDane['plik']['id_zasobu']
+            'zasoby' => $zasoby
         ], Response::HTTP_CREATED));
     }
 
@@ -114,6 +107,12 @@ class ApiController extends FOSRestController
             );
 
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
+
+            $plikFizyczny = new FizycznyPlik("");
+
+            if(!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)){
+                throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
+            }
 
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
