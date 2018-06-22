@@ -16,7 +16,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
 {
     public function pobierzSciezkeDoZasobu($zasob)
     {
-        $encja = $this->findOneBy(['idZasobu' => $zasob]);
+        $encja = $this->findOneBy(['idZasobu' => $zasob, 'czyUsuniety' => false]);
 
         if(!$encja instanceof Plik){
             throw new ZasobNieIstniejeException();
@@ -29,7 +29,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
      * @param $noweDane
      * @param $przetworzDane
      */
-    public function zapiszPlikiNaDyskuIUzupelnijDaneWBazie($noweDane, PrzetworzDane $przetworzDane): void
+    public function zapiszInformacjeOPlikuWBazie($noweDane, PrzetworzDane $przetworzDane): void
     {
         $managerEncji = $this->getEntityManager();
 
@@ -39,5 +39,25 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
             $managerEncji->persist($encjaPliku);
             $managerEncji->flush();
         }
+    }
+
+    public function usunMiekkoPlik($id_zasobu)
+    {
+        $managerEncji = $this->getEntityManager();
+
+        try{
+            $zasob = $this->findOneBy(['idZasobu' => $id_zasobu]);
+
+            /**
+             * @var $zasob Plik
+             */
+
+            $zasob->setCzyUsuniety(true);
+            $managerEncji->persist($zasob);
+            $managerEncji->flush();
+        }catch (\Exception $exception){
+
+        }
+        return true;
     }
 }
