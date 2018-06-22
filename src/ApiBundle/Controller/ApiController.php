@@ -60,7 +60,11 @@ class ApiController extends FOSRestController
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
             $email = $this->get('api.email');
-            $email->wyslijEmaila("Upload plików", $this->getParameter('mailer_user'), $this->getParameter('odbiorca_emailow'), "Upload");
+            $email->wyslijEmaila("ApiZasoby - Upload plików", $this->getParameter('nadawca_emailow'),
+                $this->getParameter('odbiorca_emailow'), $this->renderView("@Api/Email/upload.html.twig",[
+                    'uzytkownik' => $daneWejsciowe['uzytkownik']['login'],
+                    'lista_plikow' => $zasoby
+                ]));
 
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
@@ -238,5 +242,35 @@ class ApiController extends FOSRestController
             'status' => 1,
             'id_zasobu' => $daneWejsciowe['id_zasobu']
         ], Response::HTTP_ACCEPTED));
+    }
+
+    /**
+     * @Route("/test", methods={"GET"})
+     * @param Request $request
+     * @return Response
+     * @throws UzytkownikNieIstniejeException
+     */
+    public function getTestAction(Request $request)
+    {
+        try {
+
+        } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+        } catch (RozmiarPlikuJestZbytDuzyException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_REQUEST_ENTITY_TOO_LARGE));
+        } catch (NiepelneDaneException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+        } catch (BrakLacznosciZBazaException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        } catch (UzytkownikNieIstniejeException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        }
+
+        return $this->handleView($this->view([
+            'status' => 1,
+            'zasoby' => 1
+        ], Response::HTTP_CREATED));
     }
 }

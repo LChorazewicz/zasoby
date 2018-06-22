@@ -37,6 +37,7 @@ class Mailer
             ->setFrom($odKogo)
             ->setTo($doKogo)
             ->setBody($wiadomosc, 'text/html');
+
         $this->container->get('mailer')->send($message);
     }
 }
