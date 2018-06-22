@@ -4,8 +4,6 @@ imports:
     - { resource: services.yml }
     - { resource: "@ApiBundle/Resources/config/services.yml" }
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: en
 
@@ -23,7 +21,6 @@ framework:
     default_locale: '%locale%'
     trusted_hosts: ~
     session:
-        # https://symfony.com/doc/current/reference/configuration/framework.html#handler-id
         handler_id: session.handler.native_file
         save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
     fragments: ~
@@ -35,12 +32,10 @@ framework:
         enabled: true
         engines: twig
 
-# Twig Configuration
 twig:
     debug: '%kernel.debug%'
     strict_variables: '%kernel.debug%'
 
-# Doctrine Configuration
 doctrine:
     dbal:
         driver: pdo_mysql
@@ -62,13 +57,13 @@ doctrine:
         naming_strategy: doctrine.orm.naming_strategy.underscore
         auto_mapping: true
 
-# Swiftmailer Configuration
 swiftmailer:
     transport: '%mailer_transport%'
     host: '%mailer_host%'
     username: '%mailer_user%'
     password: '%mailer_password%'
     spool: { type: memory }
+    logging: '%kernel.debug%'
 
 fos_rest:
     view:

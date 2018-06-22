@@ -1,0 +1,22 @@
+{% extends "@Api/email.html.twig" %}
+
+{% block body %}
+    Poniżej znajduje się lista plików, które upload-ował {{ uzytkownik }} na serwer<br><br>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">id zasobu</th>
+            <th scope="col">pierotna nazwa</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for plik in lista_plikow %}
+            <tr>
+                <td>{{ plik.id_zasobu }}</td>
+                <td>{{ plik.pierwotna_nazwa }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
