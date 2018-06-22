@@ -1,6 +1,7 @@
 <?php
 
 namespace ApiBundle\Repository;
+
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\ZasobNieIstniejeException;
 use ApiBundle\Model\FizycznyPlik;
@@ -18,11 +19,36 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
     {
         $encja = $this->findOneBy(['idZasobu' => $zasob, 'czyUsuniety' => false]);
 
-        if(!$encja instanceof Plik){
+        if (!$encja instanceof Plik) {
             throw new ZasobNieIstniejeException();
         }
 
         return $encja->getSciezka();
+    }
+
+    /**
+     * @param $idZasobu
+     * @param $elementyDoZmiany
+     */
+    public function zmodyfikujZasob($idZasobu, $elementyDoZmiany)
+    {
+        $managerEncji = $this->getEntityManager();
+        /**
+         * @var $encja Plik
+         */
+        $encja = $this->findOneBy(['idZasobu' => $idZasobu, 'czyUsuniety' => false]);
+
+        $elementyDoZmiany = array_filter($elementyDoZmiany);
+
+        if (isset($elementyDoZmiany['pierwotna_nazwa'])) {
+            $encja->setPierwotnaNazwa($elementyDoZmiany['pierwotna_nazwa']);
+        }
+        if (isset($elementyDoZmiany['czy_usuniety'])) {
+            $encja->setCzyUsuniety($elementyDoZmiany['czy_usuniety']);
+        }
+
+        $managerEncji->persist($encja);
+        $managerEncji->flush();
     }
 
     /**
@@ -33,7 +59,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
     {
         $managerEncji = $this->getEntityManager();
 
-        foreach ($noweDane['pliki'] as $danePliku){
+        foreach ($noweDane['pliki'] as $danePliku) {
             $encjaPliku = new Plik();
             $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $danePliku, $noweDane['uzytkownik']);
             $managerEncji->persist($encjaPliku);
@@ -45,7 +71,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
     {
         $managerEncji = $this->getEntityManager();
 
-        try{
+        try {
             $zasob = $this->findOneBy(['idZasobu' => $id_zasobu]);
 
             /**
@@ -55,7 +81,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
             $zasob->setCzyUsuniety(true);
             $managerEncji->persist($zasob);
             $managerEncji->flush();
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
 
         }
         return true;

@@ -106,6 +106,10 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
+            if(!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
             $plikFizyczny = new FizycznyPlik("");
@@ -131,7 +135,7 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @Route("/zasob", methods={"GET", "DELETE"})
+     * @Route("/zasob", methods={"DELETE"})
      * @param Request $request
      * @return Response
      */
@@ -178,6 +182,58 @@ class ApiController extends FOSRestController
         }
         return $this->handleView($this->view([
             'status' => 1
+        ], Response::HTTP_ACCEPTED));
+    }
+
+    /**
+     * @Route("/zasob", methods={"PUT"})
+     * @param Request $request
+     * @return Response
+     */
+    public function putZasobAction(Request $request)
+    {
+        try{
+            $przetworzDane = new PrzetworzDane($this->container);
+            /**
+             * @var $uzytkownik UzytkownikRepository
+             */
+            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+            /**
+             * @var $plikRepository PlikRepository
+             */
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+            $daneWejsciowe = $przetworzDane->przygotujDaneWejsciowePut($request);
+
+            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe['uzytkownik']['login'])) {
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $noweDane['uzytkownik']['id'] = $uzytkownik->pobierzIdUzytkownikaPoLoginie(
+                $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
+            );
+
+            if(!$uzytkownik->czyUzytkownikMozeEdytowacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $plikRepository->zmodyfikujZasob($daneWejsciowe['id_zasobu'], $daneWejsciowe['elementy_do_zmiany']);
+
+        } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+        } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+        } catch (NiepelneDaneException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+        } catch (BrakLacznosciZBazaException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        } catch (UzytkownikNieIstniejeException $exception) {
+            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+        }
+        return $this->handleView($this->view([
+            'status' => 1,
+            'id_zasobu' => $daneWejsciowe['id_zasobu']
         ], Response::HTTP_ACCEPTED));
     }
 }

@@ -22,6 +22,64 @@ class Uzytkownik
     private $id;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="login", type="string", length=32, nullable=false)
+     */
+    private $login;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="email", type="string", length=255, nullable=false)
+     */
+    private $email;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="haslo", type="string", length=255, nullable=false)
+     */
+    private $haslo;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="idGrupy", type="smallint", nullable=false)
+     * @ORM\OneToOne(targetEntity="ApiBundle\Entity\Grupy")
+     * @ORM\JoinColumn(name="idGrupy", referencedColumnName="id")
+     */
+    private $idgrupy;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="imie", type="string", length=32, nullable=false)
+     */
+    private $imie;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="nazwisko", type="string", length=32, nullable=false)
+     */
+    private $nazwisko;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="telefon", type="string", length=9, nullable=false)
+     */
+    private $telefon;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pesel", type="string", length=11, nullable=false)
+     */
+    private $pesel;
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -164,63 +222,5 @@ class Uzytkownik
     {
         $this->pesel = $pesel;
     }
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="login", type="string", length=32, nullable=false)
-     */
-    private $login;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="email", type="string", length=255, nullable=false)
-     */
-    private $email;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="haslo", type="string", length=255, nullable=false)
-     */
-    private $haslo;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(name="idGrupy", type="smallint", nullable=false)
-     */
-    private $idgrupy;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="imie", type="string", length=32, nullable=false)
-     */
-    private $imie;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="nazwisko", type="string", length=32, nullable=false)
-     */
-    private $nazwisko;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="telefon", type="string", length=9, nullable=false)
-     */
-    private $telefon;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="pesel", type="string", length=11, nullable=false)
-     */
-    private $pesel;
-
-
 }
 

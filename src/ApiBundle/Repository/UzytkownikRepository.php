@@ -1,10 +1,12 @@
 <?php
 
 namespace ApiBundle\Repository;
+use ApiBundle\Entity\Grupy;
 use ApiBundle\Entity\Plik;
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
+use ApiBundle\Model\GrupyStale;
 
 /**
  * UzytkownikRepository
@@ -22,7 +24,7 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
             throw new UzytkownikNieIstniejeException();
         }
 
-        return ($encja->getId()) ? true : false;
+        return ($encja->getId()) ? true : (($encja->getIdgrupy() === GrupyStale::ADNMISTRATOR) ? true : false);
     }
 
     public function pobierzIdUzytkownikaPoLoginie($login, $haslo)
@@ -50,12 +52,53 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
             throw new UzytkownikNieIstniejeException();
         }
 
-        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu]);
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
 
         if(!$zasob instanceof Plik){
             throw new ZasobNieIstniejeException();
         }
 
-        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId());
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId()) ? true :
+            (($uzytkownik->getIdgrupy() === GrupyStale::ADNMISTRATOR) ? true : false);
     }
+
+    public function czyUzytkownikMozeEdytowacZasob($id_uzytkownik, $id_zasobu)
+    {
+        /**
+         * @var $id Uzytkownik
+         */
+        $uzytkownik = $this->findOneBy(['id' => $id_uzytkownik]);
+
+        if(!$uzytkownik instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
+
+        if(!$zasob instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId()) ? true :
+            (($uzytkownik->getIdgrupy() === GrupyStale::ADNMISTRATOR) ? true : false);
+    }
+
+    public function czyUzytkownikMozePobracZasob($id_uzytkownika, $id_zasobu)
+    {
+        $uzytkownik = $this->findOneBy(['id' => $id_uzytkownika]);
+
+        if(!$uzytkownik instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        $zasob = $this->getEntityManager()->getRepository(Plik::class)->findOneBy(['idZasobu' => $id_zasobu, 'czyUsuniety' => false]);
+
+        if(!$zasob instanceof Plik){
+            throw new ZasobNieIstniejeException();
+        }
+
+        return ($zasob->getUzytkownikDodajacy() === $uzytkownik->getId()) ? true :
+            (($uzytkownik->getIdgrupy() === GrupyStale::ADNMISTRATOR) ? true : false);
+    }
+
 }

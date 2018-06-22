@@ -2,9 +2,11 @@
 
 namespace ApiBundle\Controller;
 
+use Doctrine\DBAL\Types\BooleanType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -115,6 +117,46 @@ class FormularzController extends Controller
             ->getForm();
 
         return $this->render('@Api/Formularz/delete.html.twig', array(
+            'pola' => $formularz->createView()
+        ));
+    }
+
+    /**
+     * @Route("/put")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function PutAction(Request $request)
+    {
+        $formularz = $this->createFormBuilder()
+            ->setAction($this->generateUrl('api_api_putzasob'))
+            ->setMethod('PUT')
+            ->add('login', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
+            ])
+            ->add('haslo', PasswordType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Hasło']
+            ])
+            ->add('token', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'f0a6fd0c-62d5-48f1-b06c-325789694d07']
+            ])
+            ->add('id_zasobu', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'bdf3f773-bd88-562e-ab23-f8a4a35b609e']
+            ])
+            ->add('pierwotna_nazwa', TextType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'nowa nazwa zasobu'],
+                'required' => false
+            ])
+            ->add('czy_usuniety', IntegerType::class, [
+                'attr' => ['class' => 'form-control', 'placeholder' => 'czy usuniety'],
+                'required' => false
+            ])
+            ->add('aktualizuj', SubmitType::class, [
+                'attr' => ['class' => 'btn btn-primary float-right']
+            ])
+            ->getForm();
+
+        return $this->render('@Api/Formularz/put.html.twig', array(
             'pola' => $formularz->createView()
         ));
     }

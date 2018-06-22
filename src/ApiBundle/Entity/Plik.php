@@ -63,6 +63,8 @@ class Plik
      * @var integer
      *
      * @ORM\Column(name="uzytkownik_dodajacy", type="integer", nullable=false)
+     * @ORM\OneToOne(targetEntity="ApiBundle\Entity\Uzytkownik")
+     * @ORM\JoinColumn(name="uzytkownik_dodajacy", referencedColumnName="id")
      */
     private $uzytkownikDodajacy;
 
