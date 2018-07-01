@@ -2,6 +2,7 @@ imports:
     - { resource: parameters.yml }
     - { resource: security.yml }
     - { resource: services.yml }
+    - { resource: queue_services.yml }
     - { resource: "@ApiBundle/Resources/config/services.yml" }
 
 parameters:
@@ -62,7 +63,6 @@ swiftmailer:
     host: '%mailer_host%'
     username: '%mailer_user%'
     password: '%mailer_password%'
-    spool: { type: memory }
     logging: '%kernel.debug%'
 
 fos_rest:
@@ -79,6 +79,4 @@ fos_rest:
         rules:
             - { path: ^/api/formularz, prefer_extension: false, fallback_format: html, priorities: [ html ] }
             - { path: ^/api/, prefer_extension: false, fallback_format: json, priorities: [ json ] }
-
-
-
+            - { path: ^/kolejki/, prefer_extension: false, fallback_format: json, priorities: [ json ] }

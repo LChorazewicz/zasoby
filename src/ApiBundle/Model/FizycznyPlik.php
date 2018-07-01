@@ -18,7 +18,7 @@ class FizycznyPlik
 {
     private $maksymalnyRozmiarPliku;
 
-    public function __construct($maksymalnyRozmiarPliku)
+    public function __construct($maksymalnyRozmiarPliku = 0)
     {
         $this->maksymalnyRozmiarPliku = $maksymalnyRozmiarPliku;
     }
@@ -31,7 +31,7 @@ class FizycznyPlik
      * @internal param UploadedFile $plik
      */
     public function zapiszPlikNaDysku($daneWejsciowe, $noweDane)
-    {//$daneWejsciowe['plik'], $noweDane['plik']['sciezka_do_katalogu_na_dysku'], $noweDane['plik']['nazwa']['nowa_z_rozszerzeniem']
+    {
         try {
             $i = 0;
             foreach ($daneWejsciowe['pliki'] as $plik){

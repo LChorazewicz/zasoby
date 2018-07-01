@@ -1,5 +1,3 @@
-parameters:
-
 services:
     _defaults:
         autowire: true
@@ -12,5 +10,14 @@ services:
         tags: ['controller.service_arguments']
 
     api.email:
-        class: ApiBundle\Utils\Mailer
+        class: ApiBundle\Model\Mailer
         arguments: ['@service_container']
+
+    api.kolejki:
+        class: ApiBundle\Model\RabbitMQ\Kolejka
+        arguments: [
+            '%queue_host%',
+            '%queue_port%',
+            '%queue_user%',
+            '%queue_password%',
+            '%queue_vhost%']
