@@ -1,0 +1,29 @@
+old_sound_rabbit_mq:
+    connections:
+        default:
+            host:     '%queue_host%'
+            port:     '%queue_port%'
+            user:     '%queue_user%'
+            password: '%queue_password%'
+            vhost:    '%queue_vhost%'
+            lazy:     true
+            connection_timeout: 3
+            read_write_timeout: 3
+            keepalive: true
+            heartbeat: 0
+    producers:
+        KOLEJKA_WYSYLKA_EMAILOW:
+            connection:       default
+            exchange_options: {name: 'kolejka_email', type: direct}
+    consumers:
+        KOLEJKA_WYSYLKA_EMAILOW:
+            connection:       default
+            queue_options:    {name: 'kolejka_email'}
+            callback: api.email.consumer
+            enable_logger: true
+
+
+services:
+    api.email.consumer:
+        class: ApiBundle\Model\RabbitMQ\EmailConsumer
+        arguments: ['@api.email', '@monolog.logger']

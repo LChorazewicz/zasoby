@@ -17,6 +17,8 @@ use ApiBundle\Model\PrzetworzDane;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use FOS\RestBundle\Controller\FOSRestController;
+use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,12 +61,7 @@ class ApiController extends FOSRestController
 
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
-            $email = $this->get('api.email');
-            $email->wyslijEmaila("ApiZasoby - Upload plików", $this->getParameter('nadawca_emailow'),
-                $this->getParameter('odbiorca_emailow'), $this->renderView("@Api/Email/upload.html.twig",[
-                    'uzytkownik' => $daneWejsciowe['uzytkownik']['login'],
-                    'lista_plikow' => $zasoby
-                ]));
+            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
 
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
@@ -93,7 +90,7 @@ class ApiController extends FOSRestController
      */
     public function getZasobAction(Request $request)
     {
-        try{
+        try {
             $przetworzDane = new PrzetworzDane($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -113,15 +110,15 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
-            $plikFizyczny = new FizycznyPlik("");
+            $plikFizyczny = new FizycznyPlik;
 
-            if(!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)){
+            if (!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)) {
                 throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
             }
 
@@ -148,7 +145,7 @@ class ApiController extends FOSRestController
      */
     public function deleteZasobAction(Request $request)
     {
-        try{
+        try {
             $przetworzDane = new PrzetworzDane($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -168,7 +165,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozeUsunacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozeUsunacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
@@ -199,7 +196,7 @@ class ApiController extends FOSRestController
      */
     public function putZasobAction(Request $request)
     {
-        try{
+        try {
             $przetworzDane = new PrzetworzDane($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -219,7 +216,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozeEdytowacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozeEdytowacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
@@ -245,32 +242,31 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @Route("/test", methods={"GET"})
-     * @param Request $request
-     * @return Response
-     * @throws UzytkownikNieIstniejeException
+     * @param $daneWejsciowe
+     * @param $zasoby
      */
-    public function getTestAction(Request $request)
+    private function wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby): void
     {
-        try {
+        $kolejka = $this->get('api.kolejki');
 
-        } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
-        } catch (RozmiarPlikuJestZbytDuzyException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_REQUEST_ENTITY_TOO_LARGE));
-        } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
-        } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
-        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
-        } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
-        }
+        $msg = [
+            'temat' => "ApiZasoby - Upload plików",
+            'odbiorca' => $this->getParameter('odbiorca_emailow'),
+            'nadawca' => $this->getParameter('nadawca_emailow'),
+            'wiadomosc' => $this->renderView("@Api/Email/upload.html.twig", [
+                'uzytkownik' => $daneWejsciowe['uzytkownik']['login'],
+                'lista_plikow' => $zasoby
+            ]),
+        ];
 
-        return $this->handleView($this->view([
-            'status' => 1,
-            'zasoby' => 1
-        ], Response::HTTP_CREATED));
+        $wiadomosc = new AMQPMessage(json_encode($msg), [
+            'content_type' => 'text/plain',
+            'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+            'application_headers' => new AMQPTable([
+                'x-delay' => 2000
+            ])
+        ]);
+
+        $kolejka->dodajWiadomosc($wiadomosc, 'kolejka_email');
     }
 }
