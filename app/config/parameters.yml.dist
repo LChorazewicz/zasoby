@@ -4,24 +4,18 @@ parameters:
     database_name: nazwa
     database_user: user
     database_password: haslo
-
     mailer_transport: gmail
     mailer_host: smtp.gmail.com
     mailer_user: user
     mailer_password: haslo
     mailer_encryption: ssl
     mailer_auth_mode: login
-
     nadawca_emailow: email@gmail.com
     odbiorca_emailow: email@gmail.com
-
-
     secret: ThisTokenIsNotSoSecretChangeIt
-
     katalog_do_zapisu_plikow: /var/www/api_zasoby/var/upload/
     maksymalny_rozmiar_pliku_w_megabajtach: 128
     produkcja: false
-
 
     queue_host: localhost
     queue_port: 5672
