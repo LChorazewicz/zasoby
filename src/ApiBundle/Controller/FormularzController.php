@@ -106,7 +106,6 @@ class FormularzController extends Controller
     public function DownloadAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_getzasob'))
             ->setMethod('GET')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -165,7 +164,6 @@ class FormularzController extends Controller
     public function DeleteAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_deletezasob'))
             ->setMethod('DELETE')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -224,7 +222,6 @@ class FormularzController extends Controller
     public function PutAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_putzasob'))
             ->setMethod('PUT')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
