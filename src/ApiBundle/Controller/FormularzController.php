@@ -2,7 +2,7 @@
 
 namespace ApiBundle\Controller;
 
-use Doctrine\DBAL\Types\BooleanType;
+use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -10,8 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class FormularzController
@@ -28,7 +29,6 @@ class FormularzController extends Controller
     public function UploadAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
-            ->setAction($this->generateUrl('api_api_postzasob'))
             ->setMethod('POST')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -39,7 +39,7 @@ class FormularzController extends Controller
             ->add('token', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'f0a6fd0c-62d5-48f1-b06c-325789694d07']
             ])
-            ->add('plik', FileType::class, [
+            ->add('pliki', FileType::class, [
                 'label_attr' => ['class' => 'custom-file-label'],
                 'multiple' => true,
                 'attr' => [
@@ -51,6 +51,47 @@ class FormularzController extends Controller
                 'attr' => ['class' => 'btn btn-primary float-right']
             ])
             ->getForm();
+
+            $formularz->handleRequest($request);
+
+            if($formularz->isSubmitted() && $formularz->isValid()){
+                $dane = $formularz->getData();
+
+                $daneWejsciowe = [
+                    'token' => $dane['token'],
+                    'uzytkownik' => [
+                        'login' => $dane['login'],
+                        'haslo' => $dane['haslo']
+                    ],
+                    'pliki' => $dane['pliki']
+                ];
+
+                $pliki = [];
+
+                /**
+                 * @var $plik UploadedFile
+                 */
+                foreach ($dane['pliki'] as $plik){
+                    $zrodlo = file_get_contents($plik->getRealPath());
+                    $pliki[] = 'data:' . $plik->getClientMimeType() . ';base64,' . base64_encode($zrodlo);
+                }
+
+                $daneWejsciowe['pliki'] = $pliki;
+
+                $client = new Client([
+                    'timeout' => 10,
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json'
+                        ]
+                ]);
+
+                $odpowiedz = $client->post('http://127.0.0.1:8000/api/zasob', [
+                    'form_params' => $daneWejsciowe
+                ]);
+
+                return new Response($odpowiedz->getBody());
+            }
 
         return $this->render('@Api/Formularz/upload.html.twig', array(
             'pola' => $formularz->createView()
@@ -84,6 +125,33 @@ class FormularzController extends Controller
             ])
             ->getForm();
 
+        if($formularz->isSubmitted() && $formularz->isValid()){
+            $dane = $formularz->getData();
+
+            $daneWejsciowe = [
+                'token' => $dane['token'],
+                'uzytkownik' => [
+                    'login' => $dane['login'],
+                    'haslo' => $dane['haslo']
+                ],
+                'id_zasobu' => $dane['id_zasobu']
+            ];
+
+            $client = new Client([
+                'timeout' => 10,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            $odpowiedz = $client->get('http://127.0.0.1:8000/api/zasob', [
+                'form_params' => $daneWejsciowe
+            ]);
+
+            return new Response($odpowiedz->getBody());
+        }
+
         return $this->render('@Api/Formularz/download.html.twig', array(
             'pola' => $formularz->createView()
         ));
@@ -115,6 +183,33 @@ class FormularzController extends Controller
                 'attr' => ['class' => 'btn btn-primary float-right']
             ])
             ->getForm();
+
+        if($formularz->isSubmitted() && $formularz->isValid()){
+            $dane = $formularz->getData();
+
+            $daneWejsciowe = [
+                'token' => $dane['token'],
+                'uzytkownik' => [
+                    'login' => $dane['login'],
+                    'haslo' => $dane['haslo']
+                ],
+                'id_zasobu' => $dane['id_zasobu']
+            ];
+
+            $client = new Client([
+                'timeout' => 10,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            $odpowiedz = $client->delete('http://127.0.0.1:8000/api/zasob', [
+                'form_params' => $daneWejsciowe
+            ]);
+
+            return new Response($odpowiedz->getBody());
+        }
 
         return $this->render('@Api/Formularz/delete.html.twig', array(
             'pola' => $formularz->createView()
@@ -155,6 +250,37 @@ class FormularzController extends Controller
                 'attr' => ['class' => 'btn btn-primary float-right']
             ])
             ->getForm();
+
+        if($formularz->isSubmitted() && $formularz->isValid()){
+            $dane = $formularz->getData();
+
+            $daneWejsciowe = [
+                'token' => $dane['token'],
+                'uzytkownik' => [
+                    'login' => $dane['login'],
+                    'haslo' => $dane['haslo']
+                ],
+                'id_zasobu' => $dane['id_zasobu'],
+                'elementy_do_zmiany' => [
+                    'pierwotna_nazwa' => $dane['pierwotna_nazwa'],
+                    'czy_usuniety' => $dane['czy_usuniety'],
+                ]
+            ];
+
+            $client = new Client([
+                'timeout' => 10,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            $odpowiedz = $client->put('http://127.0.0.1:8000/api/zasob', [
+                'form_params' => $daneWejsciowe
+            ]);
+
+            return new Response($odpowiedz->getBody());
+        }
 
         return $this->render('@Api/Formularz/put.html.twig', array(
             'pola' => $formularz->createView()

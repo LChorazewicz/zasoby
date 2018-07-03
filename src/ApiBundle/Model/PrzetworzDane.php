@@ -38,12 +38,12 @@ class PrzetworzDane
     public function przygotujDaneWejscioweUpload(Request $request)
     {
         $daneWejsciowe = [
-            'token' => $request->request->get('form', null)['token'],
+            'token' => $request->request->get('token', null),
             'uzytkownik' => [
-                'login' => $request->request->get('form', null)['login'],
-                'haslo' => $request->request->get('form', null)['haslo']
+                'login' => $request->request->get('login', null),
+                'haslo' => $request->request->get('haslo', null)
             ],
-            'pliki' => $request->files->get('form', null)['plik']
+            'pliki' => $request->files->get('pliki', null)
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -62,12 +62,12 @@ class PrzetworzDane
     public function przygotujDaneWejscioweDownload(Request $request)
     {
         $daneWejsciowe = [
-            'token' => $request->query->get('form', null)['token'],
+            'token' => $request->query->get('token', null),
             'uzytkownik' => [
-                'login' => $request->query->get('form', null)['login'],
-                'haslo' => $request->query->get('form', null)['haslo']
+                'login' => $request->query->get('login', null),
+                'haslo' => $request->query->get('haslo', null)
             ],
-            'id_zasobu' => $request->query->get('form', null)['id_zasobu']
+            'id_zasobu' => $request->query->get('id_zasobu', null)
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -169,12 +169,12 @@ class PrzetworzDane
     public function przygotujDaneWejscioweDelete($request)
     {
         $daneWejsciowe = [
-            'token' => $request->request->get('form', null)['token'],
+            'token' => $request->request->get('token', null),
             'uzytkownik' => [
-                'login' => $request->request->get('form', null)['login'],
-                'haslo' => $request->request->get('form', null)['haslo']
+                'login' => $request->request->get('login', null),
+                'haslo' => $request->request->get('haslo', null)
             ],
-            'id_zasobu' => $request->request->get('form', null)['id_zasobu']
+            'id_zasobu' => $request->request->get('id_zasobu', null)
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -192,12 +192,12 @@ class PrzetworzDane
     public function przygotujDaneWejsciowePut($request)
     {
         $daneWejsciowe = [
-            'token' => $request->request->get('form', null)['token'],
+            'token' => $request->request->get('token', null),
             'uzytkownik' => [
-                'login' => $request->request->get('form', null)['login'],
-                'haslo' => $request->request->get('form', null)['haslo']
+                'login' => $request->request->get('login', null),
+                'haslo' => $request->request->get('haslo', null)
             ],
-            'id_zasobu' => $request->request->get('form', null)['id_zasobu']
+            'id_zasobu' => $request->request->get('id_zasobu', null)
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
@@ -205,8 +205,8 @@ class PrzetworzDane
         }
 
         $daneWejsciowe['elementy_do_zmiany'] = [
-            'pierwotna_nazwa' => $request->request->get('form', null)['pierwotna_nazwa'],
-            'czy_usuniety' => $request->request->get('form', null)['czy_usuniety']
+            'pierwotna_nazwa' => $request->request->get('pierwotna_nazwa', null),
+            'czy_usuniety' => $request->request->get('czy_usuniety', null)
         ];
 
         if(empty(array_filter($daneWejsciowe['elementy_do_zmiany']))){

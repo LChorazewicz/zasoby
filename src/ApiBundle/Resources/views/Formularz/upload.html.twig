@@ -18,14 +18,14 @@
 
         <br>
         <div class="custom-file">
-            {{ form_widget(pola.plik) }}
-            {{ form_label(pola.plik) }}
+            {{ form_widget(pola.pliki) }}
+            {{ form_label(pola.pliki) }}
         </div><br><br>
         {{ form_widget(pola.uploaduj) }}
     </div>
     {{ form_end(pola) }}
-    <script>
-        $('#form_plik').change(
+        <script>
+        $('#form_pliki').change(
             function(e){
                 let tablica = e.target.files,
                     nazwy_plikow = [];
@@ -34,7 +34,7 @@
                     nazwy_plikow.push(tablica[i].name);
                 }
 
-                $('#form_plik').parent().find('label').text(nazwy_plikow.join(", "));
+                $('#form_pliki').parent().find('label').text(nazwy_plikow.join(", "));
             });
     </script>
 
