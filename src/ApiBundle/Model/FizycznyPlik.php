@@ -58,6 +58,18 @@ class FizycznyPlik
     }
 
     /**
+     * @param $nazwaKatalogu
+     * @return string
+     */
+    private function przygotujKatalogDoZapisuZasobowTmp($nazwaKatalogu)
+    {
+        if (!is_dir($nazwaKatalogu)) {
+            mkdir($nazwaKatalogu, 0777, true);
+        }
+        return $nazwaKatalogu;
+    }
+
+    /**
      * @param UploadedFile $plik
      * @param $sciezka
      * @param $nazwa
@@ -69,12 +81,44 @@ class FizycznyPlik
             throw new RozmiarPlikuJestZbytDuzyException;
         }
         $katalog = $this->przygotujKatalogDoZapisu($sciezka);
-
+//        $plikDoUsuniecia = $plik;
         $plik->move($katalog, $nazwa);
+
+        //usuwam plik tymczasowy
+//        $plikDoUsuniecia->getRealPath();
+
     }
 
     public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)
     {
         return file_exists($sciezkaDoZasobu);
+    }
+
+    /**
+     * @param $nazwaPliku
+     * @param $katalog
+     * @param $zawartosc
+     * @return array
+     * @internal param $sciezka
+     */
+    public function stworzPlik($nazwaPliku, $katalog, $zawartosc)
+    {
+        $lokalizacja = $katalog . $nazwaPliku;
+        $this->przygotujKatalogDoZapisuZasobowTmp($katalog);
+        file_put_contents($lokalizacja, $zawartosc);
+
+        return [
+            'sciezka' => $lokalizacja,
+            'rozmiar' => filesize($lokalizacja)
+        ];
+    }
+
+    /**
+     * @param $sciezka
+     * @return bool
+     */
+    public function usunPlik($sciezka)
+    {
+        return unlink($sciezka);
     }
 }

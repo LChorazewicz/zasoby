@@ -12,6 +12,7 @@ namespace ApiBundle\Model;
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\NiepelneDaneException;
 use ApiBundle\Utils\Data;
+use Doctrine\Common\Collections\ArrayCollection;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -37,18 +38,52 @@ class PrzetworzDane
      */
     public function przygotujDaneWejscioweUpload(Request $request)
     {
+        $zawartosc = !is_null($request->getContent()) ? json_decode($request->getContent()) : null;
+
         $daneWejsciowe = [
-            'token' => $request->request->get('token', null),
+            'token' => $zawartosc->token,
             'uzytkownik' => [
-                'login' => $request->request->get('login', null),
-                'haslo' => $request->request->get('haslo', null)
+                'login' => $zawartosc->login,
+                'haslo' => $zawartosc->haslo
             ],
-            'pliki' => $request->files->get('pliki', null)
+            'pliki' => $zawartosc->pliki
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
             throw new NiepelneDaneException();
         }
+
+        $pliki = [];
+
+        foreach($daneWejsciowe['pliki'] as $plik){
+            $plik->base64 = str_replace('data:', '', $plik->base64);
+            $plik->base64 = str_replace('base64,', '', $plik->base64);
+
+            $mimeTypeIZawartosc = explode(';', $plik->base64);
+
+            $danePliku = [
+                'mimeType' => $mimeTypeIZawartosc[0],
+                'zawartosc' => base64_decode($mimeTypeIZawartosc[1]),
+                'pierwotnaNazwa' => $plik->pierwotna_nazwa
+            ];
+
+            $plikFizyczny = new FizycznyPlik();
+            $plikTymczasowy = $plikFizyczny->stworzPlik(
+                $this->generujUnikalnyIdentyfikator(),
+                $this->container->getParameter('katalog_do_zapisu_plikow_tymczasowych'),
+                $danePliku['zawartosc']
+            );
+
+            $plikWlasciwy = new UploadedFile(
+                $plikTymczasowy['sciezka'],
+                $danePliku['pierwotnaNazwa'],
+                $danePliku['mimeType'],
+                $plikTymczasowy['rozmiar'], null, true
+            );
+            $pliki[] = $plikWlasciwy;
+        }
+
+        $daneWejsciowe['pliki'] = $pliki;
 
         return $daneWejsciowe;
     }
@@ -62,12 +97,12 @@ class PrzetworzDane
     public function przygotujDaneWejscioweDownload(Request $request)
     {
         $daneWejsciowe = [
-            'token' => $request->query->get('token', null),
+            'token' => $request->query->get('form', null)['token'],
             'uzytkownik' => [
-                'login' => $request->query->get('login', null),
-                'haslo' => $request->query->get('haslo', null)
+                'login' => $request->query->get('form', null)['login'],
+                'haslo' => $request->query->get('form', null)['haslo']
             ],
-            'id_zasobu' => $request->query->get('id_zasobu', null)
+            'id_zasobu' => $request->query->get('form', null)['id_zasobu']
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {
