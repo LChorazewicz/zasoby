@@ -2,6 +2,7 @@
 
 namespace ApiBundle\Controller;
 
+use ApiBundle\Utils\Base64Response;
 use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -10,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -84,8 +86,9 @@ class FormularzController extends Controller
                     'base_uri' => 'http://mojschowek.pl/api/zasob',
                     'timeout' => 10,
                     'headers' => [
-                        'Content-Type' => 'application/json'
-                        ]
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json'
+                    ]
                 ]);
 
                 $daneDoWysylki = [
@@ -108,13 +111,12 @@ class FormularzController extends Controller
     /**
      * @Route("/download")
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Base64Response|Response
      */
     public function DownloadAction(Request $request)
     {
         $formularz = $this->createFormBuilder()
             ->setMethod('GET')
-            ->setAction($this->generateUrl('api_api_getzasob'))
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
             ])
@@ -132,32 +134,35 @@ class FormularzController extends Controller
             ])
             ->getForm();
 
-//        if($formularz->isSubmitted() && $formularz->isValid()){
-//            $dane = $formularz->getData();
-//
-//            $daneWejsciowe = [
-//                'token' => $dane['token'],
-//                'uzytkownik' => [
-//                    'login' => $dane['login'],
-//                    'haslo' => $dane['haslo']
-//                ],
-//                'id_zasobu' => $dane['id_zasobu']
-//            ];
-//
-//            $client = new Client([
-//                'timeout' => 10,
-//                'headers' => [
-//                    'Content-Type' => 'application/json',
-//                    'Accept' => 'application/json'
-//                ]
-//            ]);
-//
-//            $odpowiedz = $client->get('http://127.0.0.1:8000/api/zasob', [
-//                'form_params' => $daneWejsciowe
-//            ]);
-//
-//            return new Response($odpowiedz);
-//        }
+        $formularz->handleRequest($request);
+
+        if($formularz->isSubmitted() && $formularz->isValid()){
+            $dane = $formularz->getData();
+
+            $daneWejsciowe = [
+                'token' => $dane['token'],
+                'login' => $dane['login'],
+                'haslo' => $dane['haslo'],
+                'id_zasobu' => $dane['id_zasobu']
+            ];
+
+            $client = new Client([
+                'timeout' => 10,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+            try{
+                $odpowiedz = $client->get('http://mojschowek.pl/api/zasob?' . http_build_query($daneWejsciowe));
+            }catch (\Exception $exception){
+                dump($exception->getMessage());die();
+            }
+
+            $odp = json_decode($odpowiedz->getBody()->getContents());
+
+            return new Response('<video controls><source src="'.$odp->base64.'"></video>');
+        }
 
         return $this->render('@Api/Formularz/download.html.twig', array(
             'pola' => $formularz->createView()

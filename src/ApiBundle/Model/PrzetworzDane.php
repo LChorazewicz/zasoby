@@ -97,12 +97,12 @@ class PrzetworzDane
     public function przygotujDaneWejscioweDownload(Request $request)
     {
         $daneWejsciowe = [
-            'token' => $request->query->get('form', null)['token'],
+            'token' => $request->query->get('token', null),
             'uzytkownik' => [
-                'login' => $request->query->get('form', null)['login'],
-                'haslo' => $request->query->get('form', null)['haslo']
+                'login' => $request->query->get('login', null),
+                'haslo' => $request->query->get('haslo', null)
             ],
-            'id_zasobu' => $request->query->get('form', null)['id_zasobu']
+            'id_zasobu' => $request->query->get('id_zasobu', null)
         ];
 
         if (array_search(null, $daneWejsciowe) !== false) {

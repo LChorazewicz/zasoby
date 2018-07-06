@@ -81,12 +81,7 @@ class FizycznyPlik
             throw new RozmiarPlikuJestZbytDuzyException;
         }
         $katalog = $this->przygotujKatalogDoZapisu($sciezka);
-//        $plikDoUsuniecia = $plik;
         $plik->move($katalog, $nazwa);
-
-        //usuwam plik tymczasowy
-//        $plikDoUsuniecia->getRealPath();
-
     }
 
     public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)
@@ -120,5 +115,10 @@ class FizycznyPlik
     public function usunPlik($sciezka)
     {
         return unlink($sciezka);
+    }
+
+    public static function konwertujPlikDoFormatuBase64($sciezka, $mimetype)
+    {
+        return "data:" . $mimetype . ";base64," . base64_encode(file_get_contents($sciezka));
     }
 }

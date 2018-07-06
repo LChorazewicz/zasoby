@@ -26,6 +26,21 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
         return $encja->getSciezka();
     }
 
+    public function pobierzPodstawoweInformacjeOPliku($zasob)
+    {
+        $encja = $this->findOneBy(['idZasobu' => $zasob, 'czyUsuniety' => false]);
+
+        if (!$encja instanceof Plik) {
+            throw new ZasobNieIstniejeException();
+        }
+
+        return [
+            'sciezka' => $encja->getSciezka(),
+            'pierwotna_nazwa' => $encja->getPierwotnaNazwa(),
+            'mimetype' => $encja->getMimeType()
+        ];
+    }
+
     /**
      * @param $idZasobu
      * @param $elementyDoZmiany

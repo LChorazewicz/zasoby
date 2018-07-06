@@ -34,7 +34,8 @@ class ApiController extends FOSRestController
      */
     public function postZasobAction(Request $request)
     {
-        $odpowiedz = ['status' => 0]; $statusHttp = 400;
+        $odpowiedz = ['status' => 0]; $statusHttp = Response::HTTP_CREATED;
+
         try {
             $przetworzDane = new PrzetworzDane($this->container);
             $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
@@ -66,8 +67,6 @@ class ApiController extends FOSRestController
 
             $odpowiedz = ['status' => 1, 'zasoby' => $zasoby];
 
-            $statusHttp = Response::HTTP_CREATED;
-
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             $statusHttp = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {
@@ -92,6 +91,8 @@ class ApiController extends FOSRestController
      */
     public function getZasobAction(Request $request)
     {
+        $odpowiedz = ['status' => 0]; $statusHttp = Response::HTTP_FOUND;
+
         try {
             $przetworzDane = new PrzetworzDane($this->container);
             /**
@@ -116,28 +117,34 @@ class ApiController extends FOSRestController
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
+            $encjaPliku = $plikRepository->pobierzPodstawoweInformacjeOPliku($daneWejsciowe['id_zasobu']);
 
             $plikFizyczny = new FizycznyPlik;
 
-            if (!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)) {
+            if (!$plikFizyczny->czyPlikIstniejeNaDysku($encjaPliku['sciezka'])) {
                 throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
             }
 
+            $odpowiedz = [
+                'base64' => $plikFizyczny::konwertujPlikDoFormatuBase64($encjaPliku['sciezka'], $encjaPliku['mimetype']),
+                'pierwotna_nazwa' => $encjaPliku['pierwotna_nazwa']
+            ];
+
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+            $statusHttp = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+            $statusHttp = Response::HTTP_NOT_FOUND;
         } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+            $statusHttp = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+            $statusHttp = Response::HTTP_GATEWAY_TIMEOUT;
         } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusHttp = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusHttp = Response::HTTP_FORBIDDEN;
         }
-        return new BinaryFileResponse($sciezkaDoZasobu);
+
+        return $this->handleView($this->view($odpowiedz, $statusHttp));
     }
 
     /**
