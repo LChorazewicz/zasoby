@@ -18,7 +18,7 @@ class FizycznyPlik
 {
     private $maksymalnyRozmiarPliku;
 
-    public function __construct($maksymalnyRozmiarPliku)
+    public function __construct($maksymalnyRozmiarPliku = 0)
     {
         $this->maksymalnyRozmiarPliku = $maksymalnyRozmiarPliku;
     }

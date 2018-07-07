@@ -6,7 +6,7 @@
  * Time: 18:47
  */
 
-namespace ApiBundle\Utils;
+namespace ApiBundle\Model;
 
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -29,6 +29,7 @@ class Mailer
      * @param $odKogo
      * @param $doKogo
      * @param $wiadomosc
+     * @return bool
      */
     final public function wyslijEmaila($temat, $odKogo, $doKogo, $wiadomosc)
     {
@@ -37,6 +38,9 @@ class Mailer
             ->setFrom($odKogo)
             ->setTo($doKogo)
             ->setBody($wiadomosc, 'text/html');
+
         $this->container->get('mailer')->send($message);
+        $this->container->get('logger')->addInfo("Zakończyłem wysyłkę emaila", [$temat, $odKogo, $doKogo, $wiadomosc]);
+        return true;
     }
 }

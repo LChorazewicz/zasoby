@@ -17,6 +17,8 @@ use ApiBundle\Model\PrzetworzDane;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use FOS\RestBundle\Controller\FOSRestController;
+use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,8 +63,7 @@ class ApiController extends FOSRestController
 
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
-            $email = $this->get('api.email');
-            $email->wyslijEmaila("Upload plików", $this->getParameter('nadawca_emailow'), $this->getParameter('odbiorca_emailow'), "Upload");
+            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
 
             $msg = ['status' => 1, 'zasoby' => $zasoby];
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
@@ -111,15 +112,15 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozePobracZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
             $sciezkaDoZasobu = $plikRepository->pobierzSciezkeDoZasobu($daneWejsciowe['id_zasobu']);
 
-            $plikFizyczny = new FizycznyPlik("");
+            $plikFizyczny = new FizycznyPlik;
 
-            if(!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)){
+            if (!$plikFizyczny->czyPlikIstniejeNaDysku($sciezkaDoZasobu)) {
                 throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
             }
 
@@ -175,7 +176,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozeUsunacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozeUsunacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
@@ -228,7 +229,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
             );
 
-            if(!$uzytkownik->czyUzytkownikMozeEdytowacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])){
+            if (!$uzytkownik->czyUzytkownikMozeEdytowacZasob($noweDane['uzytkownik']['id'], $daneWejsciowe['id_zasobu'])) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
@@ -249,5 +250,34 @@ class ApiController extends FOSRestController
             $msg = Response::HTTP_FORBIDDEN;
         }
         return $this->handleView($this->view($msg, $statusCode));
+    }
+
+    /**
+     * @param $daneWejsciowe
+     * @param $zasoby
+     */
+    private function wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby): void
+    {
+        $kolejka = $this->get('api.kolejki');
+
+        $msg = [
+            'temat' => "ApiZasoby - Upload plików",
+            'odbiorca' => $this->getParameter('odbiorca_emailow'),
+            'nadawca' => $this->getParameter('nadawca_emailow'),
+            'wiadomosc' => $this->renderView("@Api/Email/upload.html.twig", [
+                'uzytkownik' => $daneWejsciowe['uzytkownik']['login'],
+                'lista_plikow' => $zasoby
+            ])
+        ];
+
+        $wiadomosc = new AMQPMessage(json_encode($msg), [
+            'content_type' => 'text/plain',
+            'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+            'application_headers' => new AMQPTable([
+                'x-delay' => 2000
+            ])
+        ]);
+
+        $kolejka->dodajWiadomosc($wiadomosc, 'kolejka_email');
     }
 }
