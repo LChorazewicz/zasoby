@@ -27,7 +27,7 @@ class FormularzController extends Controller
      */
     public function UploadAction(Request $request)
     {
-        $formularz = $this->createFormBuilder()
+        $formularz = $this->get('form.factory')->createNamedBuilder('')
             ->setAction($this->generateUrl('api_api_postzasob'))
             ->setMethod('POST')
             ->add('login', TextType::class, [
@@ -39,7 +39,7 @@ class FormularzController extends Controller
             ->add('token', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'f0a6fd0c-62d5-48f1-b06c-325789694d07']
             ])
-            ->add('plik', FileType::class, [
+            ->add('pliki', FileType::class, [
                 'label_attr' => ['class' => 'custom-file-label'],
                 'multiple' => true,
                 'attr' => [
@@ -64,7 +64,7 @@ class FormularzController extends Controller
      */
     public function DownloadAction(Request $request)
     {
-        $formularz = $this->createFormBuilder()
+        $formularz = $this->get('form.factory')->createNamedBuilder('')
             ->setAction($this->generateUrl('api_api_getzasob'))
             ->setMethod('GET')
             ->add('login', TextType::class, [
@@ -96,7 +96,7 @@ class FormularzController extends Controller
      */
     public function DeleteAction(Request $request)
     {
-        $formularz = $this->createFormBuilder()
+        $formularz = $this->get('form.factory')->createNamedBuilder('')
             ->setAction($this->generateUrl('api_api_deletezasob'))
             ->setMethod('DELETE')
             ->add('login', TextType::class, [
@@ -128,7 +128,7 @@ class FormularzController extends Controller
      */
     public function PutAction(Request $request)
     {
-        $formularz = $this->createFormBuilder()
+        $formularz = $this->get('form.factory')->createNamedBuilder('')
             ->setAction($this->generateUrl('api_api_putzasob'))
             ->setMethod('PUT')
             ->add('login', TextType::class, [

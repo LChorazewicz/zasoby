@@ -32,6 +32,8 @@ class ApiController extends FOSRestController
      */
     public function postZasobAction(Request $request)
     {
+        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+
         try {
             $przetworzDane = new PrzetworzDane($this->container);
             $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
@@ -60,26 +62,24 @@ class ApiController extends FOSRestController
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
 
             $email = $this->get('api.email');
-            $email->wyslijEmaila("Upload plików", $this->getParameter('mailer_user'), $this->getParameter('odbiorca_emailow'), "Upload");
+            $email->wyslijEmaila("Upload plików", $this->getParameter('nadawca_emailow'), $this->getParameter('odbiorca_emailow'), "Upload");
 
+            $msg = ['status' => 1, 'zasoby' => $zasoby];
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_REQUEST_ENTITY_TOO_LARGE));
+            $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
         } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+            $statusCode = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+            $statusCode = Response::HTTP_GATEWAY_TIMEOUT;
         } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusCode = Response::HTTP_FORBIDDEN;
         }
 
-        return $this->handleView($this->view([
-            'status' => 1,
-            'zasoby' => $zasoby
-        ], Response::HTTP_CREATED));
+        return $this->handleView($this->view($msg, $statusCode));
     }
 
     /**
@@ -89,6 +89,8 @@ class ApiController extends FOSRestController
      */
     public function getZasobAction(Request $request)
     {
+        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0]; $sciezka = null;
+
         try{
             $przetworzDane = new PrzetworzDane($this->container);
             /**
@@ -121,20 +123,27 @@ class ApiController extends FOSRestController
                 throw new BladOdczytuPlikuZDyskuException("Plik nie istnieje");
             }
 
+            $sciezka = $sciezkaDoZasobu;
+
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+            $statusCode = Response::HTTP_NOT_FOUND;
         } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+            $statusCode = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+            $statusCode = Response::HTTP_GATEWAY_TIMEOUT;
         } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $statusCode = Response::HTTP_FORBIDDEN;
         }
-        return new BinaryFileResponse($sciezkaDoZasobu);
+
+        if(!is_null($sciezka)){
+            return new BinaryFileResponse($sciezka, Response::HTTP_OK);
+        }
+
+        return $this->handleView($this->view($msg, $statusCode));
     }
 
     /**
@@ -144,6 +153,8 @@ class ApiController extends FOSRestController
      */
     public function deleteZasobAction(Request $request)
     {
+        $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
+
         try{
             $przetworzDane = new PrzetworzDane($this->container);
             /**
@@ -170,22 +181,22 @@ class ApiController extends FOSRestController
 
             $plikRepository->usunMiekkoPlik($daneWejsciowe['id_zasobu']);
 
+            $msg = ['status' => 1];
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+            $msg = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+            $msg = Response::HTTP_NOT_FOUND;
         } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+            $msg = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+            $msg = Response::HTTP_GATEWAY_TIMEOUT;
         } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $msg = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $msg = Response::HTTP_FORBIDDEN;
         }
-        return $this->handleView($this->view([
-            'status' => 1
-        ], Response::HTTP_ACCEPTED));
+
+        return $this->handleView($this->view($msg, $statusCode));
     }
 
     /**
@@ -195,6 +206,8 @@ class ApiController extends FOSRestController
      */
     public function putZasobAction(Request $request)
     {
+        $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
+
         try{
             $przetworzDane = new PrzetworzDane($this->container);
             /**
@@ -221,22 +234,20 @@ class ApiController extends FOSRestController
 
             $plikRepository->zmodyfikujZasob($daneWejsciowe['id_zasobu'], $daneWejsciowe['elementy_do_zmiany']);
 
+            $msg = ['status' => 1, 'id_zasobu' => $daneWejsciowe['id_zasobu']];
         } catch (BladOdczytuPlikuZDyskuException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_SERVICE_UNAVAILABLE));
+            $msg = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (ZasobNieIstniejeException $bladZapisuPlikuNaDysku) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_NOT_FOUND));
+            $msg = Response::HTTP_NOT_FOUND;
         } catch (NiepelneDaneException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_BAD_REQUEST));
+            $msg = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_GATEWAY_TIMEOUT));
+            $msg = Response::HTTP_GATEWAY_TIMEOUT;
         } catch (UzytkownikNiePosiadaUprawnienException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $msg = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
-            return $this->handleView($this->view(['status' => 0], Response::HTTP_FORBIDDEN));
+            $msg = Response::HTTP_FORBIDDEN;
         }
-        return $this->handleView($this->view([
-            'status' => 1,
-            'id_zasobu' => $daneWejsciowe['id_zasobu']
-        ], Response::HTTP_ACCEPTED));
+        return $this->handleView($this->view($msg, $statusCode));
     }
 }
