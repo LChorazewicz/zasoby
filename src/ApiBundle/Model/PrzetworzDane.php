@@ -16,6 +16,7 @@ use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
 use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
 use ApiBundle\Library\Helper\EncjaPliku;
 use ApiBundle\Library\Plik\Generuj;
+use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,13 +26,13 @@ use Symfony\Component\HttpFoundation\Request;
 class PrzetworzDane
 {
     /**
-     * @var $container \Psr\Container\ContainerInterface
+     * @var $kontenerParametrow KontenerParametrow
      */
-    private $container;
+    private $kontenerParametrow;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(KontenerParametrow $kontenerParametrow)
     {
-        $this->container = $container;
+        $this->kontenerParametrow = $kontenerParametrow;
     }
 
 
@@ -43,10 +44,7 @@ class PrzetworzDane
     public function przygotujDaneWejscioweUpload(Request $request)
     {
         try{
-            $encja = new DaneWejscioweUpload(json_decode($request->getContent()), [
-                'katalog_do_zapisu_plikow_tymczasowych' => $this->container->getParameter('katalog_do_zapisu_plikow_tymczasowych'),
-                'katalog_do_zapisu_plikow' => $this->container->getParameter('katalog_do_zapisu_plikow')
-            ]);
+            $encja = new DaneWejscioweUpload(json_decode($request->getContent()), $this->kontenerParametrow);
         }catch (\Exception $exception){
             throw new NiepelneDaneException();
         }
@@ -100,33 +98,22 @@ class PrzetworzDane
 
     /**
      * @param Plik $encjaPliku
-     * @param EncjaPliku $noweDane
+     * @param EncjaPliku $danePliku
      * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik
      * @return Plik
      */
-    public static function uzupelnijEncjePliku(Plik $encjaPliku, EncjaPliku $noweDane, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik)
+    public static function uzupelnijEncjePliku(Plik $encjaPliku, EncjaPliku $danePliku, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik)
     {
-        $encjaPliku->setSciezka($noweDane->getSciezkaDoPlikuNaDysku());
-        $encjaPliku->setNazwaZasobu($noweDane->getNowaNazwaPlikuZRozszerzeniem());
-        $encjaPliku->setPierwotnaNazwa($noweDane->getPierwotnaNazwaPliku());
-        $encjaPliku->setRozmiar($noweDane->getRozmiar());
-        $encjaPliku->setDataDodania($noweDane->getDataDodania());
+        $encjaPliku->setSciezka($danePliku->getSciezkaDoPlikuDocelowego());
+        $encjaPliku->setNazwaZasobu($danePliku->getNowaNazwaPlikuZRozszerzeniem());
+        $encjaPliku->setPierwotnaNazwa($danePliku->getPierwotnaNazwaPliku());
+        $encjaPliku->setRozmiar($danePliku->getRozmiar());
+        $encjaPliku->setDataDodania($danePliku->getDataDodania());
         $encjaPliku->setUzytkownikDodajacy($uzytkownik->getId());
-        $encjaPliku->setMimeType($noweDane->getMimeType());
-        $encjaPliku->setIdZasobu($noweDane->getIdZasobu());
+        $encjaPliku->setMimeType($danePliku->getMimeType());
+        $encjaPliku->setIdZasobu($danePliku->getIdZasobu());
         $encjaPliku->setCzyUsuniety(false);
         return $encjaPliku;
-    }
-
-    /**
-     * @return string
-     */
-    private function generujUnikalnyIdentyfikator(): string
-    {
-        return (Uuid::uuid5(
-            Uuid::NAMESPACE_DNS,
-            md5(uniqid(rand(), true))
-        ))->toString();
     }
 
 

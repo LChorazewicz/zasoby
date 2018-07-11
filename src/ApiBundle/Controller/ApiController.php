@@ -18,6 +18,7 @@ use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\PrzetworzDane;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
+use ApiBundle\Services\KontenerParametrow;
 use FOS\RestBundle\Controller\FOSRestController;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -28,6 +29,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApiController extends FOSRestController
 {
+    private $kontenerParametrow;
+
+    public function __construct(KontenerParametrow $kontenerParametrow)
+    {
+        $this->kontenerParametrow = $kontenerParametrow;
+    }
     /**
      * @Route("/zasob", methods={"POST"})
      * @param Request $request
@@ -39,8 +46,8 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
 
         try {
-            $przetworzDane = new PrzetworzDane($this->container);
-            $fizycznyPlik = new FizycznyPlik($this->container->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
+            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
             $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
 
             /**
@@ -58,7 +65,7 @@ class ApiController extends FOSRestController
                 $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
             ));
 
-            $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe);
+            $fizycznyPlik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
             $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
 
             $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);

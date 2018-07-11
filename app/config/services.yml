@@ -21,3 +21,5 @@ services:
             '%queue_user%',
             '%queue_password%',
             '%queue_vhost%']
+    ApiBundle\Services\KontenerParametrow:
+        arguments: ['@service_container']

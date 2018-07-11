@@ -9,6 +9,7 @@
 namespace ApiBundle\Library\Helper\DaneWejsciowe;
 
 
+use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
 
 class DaneWejscioweUpload
@@ -20,10 +21,13 @@ class DaneWejscioweUpload
     private $daneUzytkownika;
     private $params;
 
-    public function __construct($daneWejsciowe, array $params)
+    public function __construct($daneWejsciowe, KontenerParametrow $kontenerParametrow)
     {
         $this->token = $daneWejsciowe->token;
-        $this->params = $params;
+        $this->params = [
+            'katalog_do_zapisu_plikow_tymczasowych' => $kontenerParametrow->pobierzParametrZConfigu('katalog_do_zapisu_plikow_tymczasowych'),
+            'katalog_do_zapisu_plikow' => $kontenerParametrow->pobierzParametrZConfigu('katalog_do_zapisu_plikow')
+        ];
         $this->setDaneUzytkownika($daneWejsciowe->login, $daneWejsciowe->haslo);
         $this->setKolekcjaPlikow($daneWejsciowe->pliki, $this->getDaneUzytkownika());
     }

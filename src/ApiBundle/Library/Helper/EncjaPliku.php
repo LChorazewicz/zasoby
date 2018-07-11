@@ -27,13 +27,11 @@ class EncjaPliku
     /**
      * @var string
      */
-    private $sciezkaDoPlikuNaDysku;
-
+    private $sciezkaDoPlikuDocelowego;
     /**
      * @var string
      */
-    private $sciezkaDoZapisuPlikuTymczasowego;
-
+    private $sciezkaDoPlikuTymczasowego;
     /**
      * @var string
      */
@@ -53,7 +51,7 @@ class EncjaPliku
     /**
      * @var string
      */
-    private $katalogZapisu;
+    private $katalogZapisuDocelowego;
     /**
      * @var string
      */
@@ -66,7 +64,6 @@ class EncjaPliku
      * @var \DateTime
      */
     private $dataDodania;
-
     /**
      * @var int
      */
@@ -75,6 +72,14 @@ class EncjaPliku
      * @var string
      */
     private $loginUzytkownikaDodajacego;
+    /**
+     * @var bool
+     */
+    private $zapisanyPlikTymczasowy;
+    /**
+     * @var bool
+     */
+    private $zapisanyPlikDocelowy;
 
     /**
      * @return string
@@ -133,36 +138,36 @@ class EncjaPliku
     /**
      * @return string
      */
-    public function getSciezkaDoPlikuNaDysku(): string
+    public function getSciezkaDoPlikuDocelowego(): string
     {
-        return $this->sciezkaDoPlikuNaDysku;
+        return $this->sciezkaDoPlikuDocelowego;
     }
 
     /**
-     * @param string $sciezkaDoPlikuNaDysku
+     * @param string $sciezkaDoPlikuDocelowego
      * @return $this
      */
-    public function setSciezkaDoPlikuNaDysku(string $sciezkaDoPlikuNaDysku)
+    public function setSciezkaDoPlikuDocelowego(string $sciezkaDoPlikuDocelowego)
     {
-        $this->sciezkaDoPlikuNaDysku = $sciezkaDoPlikuNaDysku;
+        $this->sciezkaDoPlikuDocelowego = $sciezkaDoPlikuDocelowego;
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getSciezkaDoZapisuPlikuTymczasowego(): string
+    public function getSciezkaDoPlikuTymczasowego(): string
     {
-        return $this->sciezkaDoZapisuPlikuTymczasowego;
+        return $this->sciezkaDoPlikuTymczasowego;
     }
 
     /**
-     * @param string $sciezkaDoZapisuPlikuTymczasowego
+     * @param string $sciezkaDoPlikuTymczasowego
      * @return $this
      */
-    public function setSciezkaDoZapisuPlikuTymczasowego(string $sciezkaDoZapisuPlikuTymczasowego)
+    public function setSciezkaDoPlikuTymczasowego(string $sciezkaDoPlikuTymczasowego)
     {
-        $this->sciezkaDoZapisuPlikuTymczasowego = $sciezkaDoZapisuPlikuTymczasowego;
+        $this->sciezkaDoPlikuTymczasowego = $sciezkaDoPlikuTymczasowego;
         return $this;
     }
 
@@ -241,18 +246,18 @@ class EncjaPliku
     /**
      * @return string
      */
-    public function getKatalogZapisu(): string
+    public function getKatalogZapisuDocelowego(): string
     {
-        return $this->katalogZapisu;
+        return $this->katalogZapisuDocelowego;
     }
 
     /**
-     * @param string $katalogZapisu
+     * @param string $katalogZapisuDocelowego
      * @return $this
      */
-    public function setKatalogZapisu(string $katalogZapisu)
+    public function setKatalogZapisuDocelowego(string $katalogZapisuDocelowego)
     {
-        $this->katalogZapisu = $katalogZapisu;
+        $this->katalogZapisuDocelowego = $katalogZapisuDocelowego;
         return $this;
     }
 
@@ -343,6 +348,62 @@ class EncjaPliku
     public function setLoginUzytkownikaDodajacego(string $loginUzytkownikaDodajacego)
     {
         $this->loginUzytkownikaDodajacego = $loginUzytkownikaDodajacego;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isZapisanyPlikTymczasowy(): bool
+    {
+        return $this->zapisanyPlikTymczasowy;
+    }
+
+    /**
+     * @param bool $zapisanyPlikTymczasowy
+     * @return $this
+     */
+    public function setZapisanyPlikTymczasowy(bool $zapisanyPlikTymczasowy)
+    {
+        $this->zapisanyPlikTymczasowy = $zapisanyPlikTymczasowy;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isZapisanyPlikDocelowy(): bool
+    {
+        return $this->zapisanyPlikDocelowy;
+    }
+
+    /**
+     * @param bool $zapisanyPlikDocelowy
+     * @return $this
+     */
+    public function setZapisanyPlikDocelowy(bool $zapisanyPlikDocelowy)
+    {
+        $this->zapisanyPlikDocelowy = $zapisanyPlikDocelowy;
+        return $this;
+    }
+
+    public function nazwa()
+    {
+        return $this;
+    }
+
+    public function wlasciwosc()
+    {
+        return $this;
+    }
+
+    public function lokalizacja()
+    {
+        return $this;
+    }
+
+    public function daneUzytkownikaDodajcego()
+    {
         return $this;
     }
 

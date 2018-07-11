@@ -22,6 +22,10 @@ class FizycznyPlik
 {
     private $maksymalnyRozmiarPliku;
 
+    /**
+     * FizycznyPlik constructor.
+     * @param int $maksymalnyRozmiarPliku
+     */
     public function __construct($maksymalnyRozmiarPliku = 0)
     {
         $this->maksymalnyRozmiarPliku = $maksymalnyRozmiarPliku;
@@ -31,9 +35,8 @@ class FizycznyPlik
     /**
      * @param $daneWejsciowe DaneWejscioweUpload
      * @throws BladZapisuPlikuNaDyskuException
-     * @internal param UploadedFile $plik
      */
-    public function zapiszPlikNaDysku($daneWejsciowe)
+    public function zapiszPlikiDoceloweNaDysku($daneWejsciowe)
     {
         try {
             $i = 0;
@@ -41,10 +44,8 @@ class FizycznyPlik
              * @var $plik EncjaPlikuNaPoziomieDanychWejsciowych
              */
             foreach ($daneWejsciowe->getKolekcjaPlikow() as $plik){
-                $this->zapiszPlik($plik->getEncjaPliku());
-                $i++;
+                $this->zapiszPlikDocelowy($plik->getEncjaPliku());$i++;
             }
-
 
         } catch (FileException $exception) {
             throw new BladZapisuPlikuNaDyskuException;
@@ -65,16 +66,44 @@ class FizycznyPlik
 
     /**
      * @param EncjaPliku $plik
+     * @param bool $docelowy
+     * @return EncjaPliku
      * @throws RozmiarPlikuJestZbytDuzyException
      */
-    private function zapiszPlik(EncjaPliku $plik): void
+    private function zapiszPlik(EncjaPliku $plik, bool $docelowy): EncjaPliku
     {
         if ((int)$plik->getRozmiar() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
             throw new RozmiarPlikuJestZbytDuzyException;
         }
-        $katalog = $this->przygotujKatalogDoZapisu($plik->getKatalogZapisu());
 
-        (new Plik())->zapisz($plik->getSciezkaDoPlikuNaDysku(), $plik->getZawartosc());
+        $oPlik = new Plik();
+
+        if($docelowy){
+            $sciezka = $plik->lokalizacja()->getSciezkaDoPlikuDocelowego();
+            $this->przygotujKatalogDoZapisu($plik->lokalizacja()->getKatalogZapisuDocelowego());
+            if($plik->wlasciwosc()->isZapisanyPlikTymczasowy()){
+                $oPlik->usun($plik->lokalizacja()->getSciezkaDoPlikuTymczasowego());
+                $plik->wlasciwosc()->setZapisanyPlikTymczasowy(false);
+                $plik->wlasciwosc()->setZapisanyPlikDocelowy(true);
+            }
+        }else{
+            $sciezka = $plik->lokalizacja()->getSciezkaDoPlikuTymczasowego();
+            $this->przygotujKatalogDoZapisu($plik->lokalizacja()->getKatalogZapisuTymczasowego());
+            $plik->wlasciwosc()->setZapisanyPlikTymczasowy(true);
+            $plik->wlasciwosc()->setZapisanyPlikDocelowy(false);
+        }
+        $oPlik->zapisz($sciezka, $plik->wlasciwosc()->getZawartosc());
+        return $plik;
+    }
+
+    public function zapiszPlikDocelowy(EncjaPliku $encjaPliku)
+    {
+       return $this->zapiszPlik($encjaPliku, true);
+    }
+
+    public function zapiszPlikTymczasowy(EncjaPliku $encjaPliku)
+    {
+        return $this->zapiszPlik($encjaPliku, false);
     }
 
     public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)

@@ -12,6 +12,7 @@ namespace ApiBundle\Library\Plik;
 use ApiBundle\Library\Generuj;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneUzytkownikaNaPoziomieDanychWejsciowych;
 use ApiBundle\Library\Helper\EncjaPliku;
+use ApiBundle\Model\FizycznyPlik;
 
 class Base64
 {
@@ -51,23 +52,34 @@ class Base64
         $sciezkaZapisuTymczasowego = $katalogZapisuTymczasowego . $nowaNazwaPliku . '.' . $rozszerzenie;
         $sciezkaZapisu = $katalogZapisuTymczasowego . $nowaNazwaPliku . '.' . $rozszerzenie;
 
-        (new Plik())->zapisz($sciezkaZapisu, $odkodowanaZawartosc);
+        $encjaPliku = (new EncjaPliku)
+            ->nazwa()
+                ->setPierwotnaNazwaPliku($pierwotnaNazwa)
+                ->setNowaNazwaPlikuZRozszerzeniem($nowaNazwaPliku . '.' .$rozszerzenie)
+                ->setNowaNazwaPlikuBezRozszerzenia($nowaNazwaPliku)
+            ->wlasciwosc()
+                ->setMimeType($mimeTypeIBase64[0])
+                ->setRozszerzenie($rozszerzenie)
+                ->setZawartosc($odkodowanaZawartosc)
+                ->setDataDodania(new \DateTime())
+                ->setIdZasobu(Generuj::UnikalnaNazwe())
+                ->setRozmiar(0)
+                ->setZapisanyPlikTymczasowy(false)
+                ->setZapisanyPlikDocelowy(false)
+            ->lokalizacja()
+                ->setKatalogZapisuDocelowego($katalogDoZapisu)
+                ->setKatalogZapisuTymczasowego($katalogZapisuTymczasowego)
+                ->setSciezkaDoPlikuDocelowego($sciezkaZapisu)
+                ->setSciezkaDoPlikuTymczasowego($sciezkaZapisuTymczasowego)
+            ->daneUzytkownikaDodajcego()
+                ->setIdUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getId())
+                ->setLoginUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getLogin());
 
-        return (new EncjaPliku)
-            ->setPierwotnaNazwaPliku($pierwotnaNazwa)
-            ->setMimeType($mimeTypeIBase64[0])
-            ->setZawartosc($odkodowanaZawartosc)
-            ->setNowaNazwaPlikuZRozszerzeniem($nowaNazwaPliku . '.' .$rozszerzenie)
-            ->setNowaNazwaPlikuBezRozszerzenia($nowaNazwaPliku)
-            ->setDataDodania(new \DateTime())
-            ->setKatalogZapisu($katalogDoZapisu)
-            ->setKatalogZapisuTymczasowego($katalogZapisuTymczasowego)
-            ->setIdZasobu(Generuj::UnikalnaNazwe())
-            ->setRozmiar(filesize($sciezkaZapisu))
-            ->setRozszerzenie($rozszerzenie)
-            ->setSciezkaDoPlikuNaDysku($sciezkaZapisu)
-            ->setSciezkaDoZapisuPlikuTymczasowego($sciezkaZapisuTymczasowego)
-            ->setIdUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getId())
-            ->setLoginUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getLogin());
+        $encjaPliku = (new FizycznyPlik())->zapiszPlikTymczasowy($encjaPliku);
+
+        $encjaPliku->wlasciwosc()
+            ->setRozmiar(filesize($sciezkaZapisu));
+
+        return $encjaPliku;
     }
 }

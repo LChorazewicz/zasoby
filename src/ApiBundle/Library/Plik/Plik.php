@@ -24,16 +24,8 @@ class Plik
         return file_put_contents($lokalizacja, $zawartoscPliku);
     }
 
-    public function przedstawEncjePlikuWPostaciObiektuUploadedFile(EncjaPliku $encjaPliku)
+    public function usun($getSciezkaDoZapisuPlikuTymczasowego)
     {
-        $this->zapisz($encjaPliku->getLokalizacja(), $encjaPliku->getZawartosc());
-
-        return new UploadedFile(
-            $encjaPliku->getLokalizacja(),
-            $encjaPliku->getPierwotnaNazwaPliku(),
-            $encjaPliku->getMimeType(),
-            filesize($encjaPliku->getLokalizacja()),
-            null, true
-        );
+        return unlink($getSciezkaDoZapisuPlikuTymczasowego);
     }
 }
