@@ -2,7 +2,10 @@
 
 namespace ApiBundle\Controller;
 
+use ApiBundle\Model\Guzzle\Fabryka;
 use Doctrine\DBAL\Types\BooleanType;
+use GuzzleHttp\Client;
+use Hshn\Base64EncodedFile\Form\Type\Base64EncodedFileType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -10,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -28,7 +32,6 @@ class FormularzController extends Controller
     public function UploadAction(Request $request)
     {
         $formularz = $this->get('form.factory')->createNamedBuilder('')
-            ->setAction($this->generateUrl('api_api_postzasob'))
             ->setMethod('POST')
             ->add('login', TextType::class, [
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Użytkownik']
@@ -51,6 +54,39 @@ class FormularzController extends Controller
                 'attr' => ['class' => 'btn btn-primary float-right']
             ])
             ->getForm();
+
+        $formularz->handleRequest($request);
+
+        if($formularz->isSubmitted() && $formularz->isValid()){
+            $dane = $formularz->getData();
+
+            $daneDoWyslania = [
+                'token' => $dane['token'],
+                'login' => $dane['login'],
+                'haslo' => $dane['haslo']
+            ];
+
+            $pliki = [];
+
+            /**
+             * @var $plik UploadedFile
+             */
+            foreach ($dane['pliki'] as $plik){
+                $pliki[] = [
+                    'pierwotna_nazwa' => $plik->getClientOriginalName(),
+                    'base64' => 'date:' . $plik->getMimeType() . ';base64,' . base64_encode(file_get_contents($plik->getRealPath()))
+                ];
+            }
+
+            $daneDoWyslania['pliki'] = $pliki;
+
+            $klient = new Client();
+            $odpowiedz = $klient->post('http://mojschowek.pl/api/zasob', [
+                'json' => $daneDoWyslania
+            ]);
+
+            return new JsonResponse(json_decode($odpowiedz->getBody()->getContents()));
+        }
 
         return $this->render('@Api/Formularz/upload.html.twig', array(
             'pola' => $formularz->createView()

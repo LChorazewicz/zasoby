@@ -30,7 +30,8 @@ class KolejkiController extends FOSRestController
          * todo: zrobic builder restartu kolejek
          */
         $kolejki = [
-            ['nazwa' => 'kolejka_email', 'exchange' => 'kolejka_email']
+            ['nazwa' => 'kolejka_email', 'exchange' => 'kolejka_email'],
+            ['nazwa' => 'kolejka_zapis_plikow', 'exchange' => 'kolejka_zapis_plikow']
         ];
 
         try{

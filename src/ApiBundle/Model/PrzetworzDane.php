@@ -11,6 +11,11 @@ namespace ApiBundle\Model;
 
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\NiepelneDaneException;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneUzytkownikaNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
+use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\Helper\EncjaPliku;
+use ApiBundle\Library\Plik\Generuj;
 use ApiBundle\Utils\Data;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -32,25 +37,21 @@ class PrzetworzDane
 
     /**
      * @param Request $request
-     * @return array
+     * @return DaneWejscioweUpload
      * @throws NiepelneDaneException
      */
     public function przygotujDaneWejscioweUpload(Request $request)
     {
-        $daneWejsciowe = [
-            'token' => $request->request->get('token', null),
-            'uzytkownik' => [
-                'login' => $request->request->get('login', null),
-                'haslo' => $request->request->get('haslo', null)
-            ],
-            'pliki' => $request->files->get('pliki', null)
-        ];
-
-        if (array_search(null, $daneWejsciowe) !== false) {
+        try{
+            $encja = new DaneWejscioweUpload(json_decode($request->getContent()), [
+                'katalog_do_zapisu_plikow_tymczasowych' => $this->container->getParameter('katalog_do_zapisu_plikow_tymczasowych'),
+                'katalog_do_zapisu_plikow' => $this->container->getParameter('katalog_do_zapisu_plikow')
+            ]);
+        }catch (\Exception $exception){
             throw new NiepelneDaneException();
         }
 
-        return $daneWejsciowe;
+        return $encja;
     }
 
 
@@ -78,37 +79,15 @@ class PrzetworzDane
     }
 
     /**
-     * @param $aDaneWejsciowe
+     * @param $daneWejsciowe DaneWejscioweUpload
      * @return array
      */
-    public function przetworzDaneWejsciowe($aDaneWejsciowe)
+    public function przetworzDaneWejsciowe($daneWejsciowe)
     {
         $odpowiedz = [];
 
-        /**
-         * @var $plik UploadedFile
-         */
-        foreach ($aDaneWejsciowe['pliki'] as $plik){
-            $idZasobu = $this->generujUnikalnyIdentyfikator();
-            $nazwaZasobuNaDysku = $this->generujUnikalnyIdentyfikator();
-
-            $nowaNazwaPlikuNaDysku = $nazwaZasobuNaDysku . '.' . $plik->getClientOriginalExtension();
-            $katalogDoZapisu = $this->container->getParameter('katalog_do_zapisu_plikow') .
-                Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/';
-
-            $odpowiedz['pliki'][] = [
-                'nazwa' => [
-                    'pierwotna_z_rozszerzeniem' => $plik->getClientOriginalName(),
-                    'nowa_z_rozszerzeniem' => $nowaNazwaPlikuNaDysku,
-                    'nowa_bez_rozszerzenia' => $nazwaZasobuNaDysku
-                ],
-                'id_zasobu' =>  $idZasobu,
-                'rozmiar' => $plik->getClientSize(),
-                'sciezka_do_katalogu_na_dysku' => $katalogDoZapisu,
-                'sciezka_do_zasobu_na_dysku' => $katalogDoZapisu . $nowaNazwaPlikuNaDysku,
-                'data_dodania' => new \DateTime(),
-                'mime_type' => $plik->getClientMimeType()
-            ];
+        foreach ($daneWejsciowe->getKolekcjaPlikow() as $plik){
+            $odpowiedz['pliki'][] = $plik;
         }
 
         $odpowiedz['uzytkownik'] = [
@@ -119,16 +98,22 @@ class PrzetworzDane
         return $odpowiedz;
     }
 
-    public function uzupelnijEncjePliku(Plik $encjaPliku, $noweDane, $uzytkownik)
+    /**
+     * @param Plik $encjaPliku
+     * @param EncjaPliku $noweDane
+     * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik
+     * @return Plik
+     */
+    public static function uzupelnijEncjePliku(Plik $encjaPliku, EncjaPliku $noweDane, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik)
     {
-        $encjaPliku->setSciezka($noweDane['sciezka_do_zasobu_na_dysku']);
-        $encjaPliku->setNazwaZasobu($noweDane['nazwa']['nowa_z_rozszerzeniem']);
-        $encjaPliku->setPierwotnaNazwa($noweDane['nazwa']['pierwotna_z_rozszerzeniem']);
-        $encjaPliku->setRozmiar($noweDane['rozmiar']);
-        $encjaPliku->setDataDodania($noweDane['data_dodania']);
-        $encjaPliku->setUzytkownikDodajacy($uzytkownik['id']);
-        $encjaPliku->setMimeType($noweDane['mime_type']);
-        $encjaPliku->setIdZasobu($noweDane['id_zasobu']);
+        $encjaPliku->setSciezka($noweDane->getSciezkaDoPlikuNaDysku());
+        $encjaPliku->setNazwaZasobu($noweDane->getNowaNazwaPlikuZRozszerzeniem());
+        $encjaPliku->setPierwotnaNazwa($noweDane->getPierwotnaNazwaPliku());
+        $encjaPliku->setRozmiar($noweDane->getRozmiar());
+        $encjaPliku->setDataDodania($noweDane->getDataDodania());
+        $encjaPliku->setUzytkownikDodajacy($uzytkownik->getId());
+        $encjaPliku->setMimeType($noweDane->getMimeType());
+        $encjaPliku->setIdZasobu($noweDane->getIdZasobu());
         $encjaPliku->setCzyUsuniety(false);
         return $encjaPliku;
     }
@@ -146,16 +131,20 @@ class PrzetworzDane
 
 
     /**
-     * @param $noweDane
+     * @param $dane
      * @return array
      */
-    public function pobierzIdWszystkichZasobowDlaTegoZadania($noweDane): array
+    public function pobierzIdWszystkichZasobowDlaTegoZadania(DaneWejscioweUpload $dane): array
     {
         $zasoby = [];
-        foreach ($noweDane['pliki'] as $plik) {
+
+        /**
+         * @var $plik EncjaPlikuNaPoziomieDanychWejsciowych
+         */
+        foreach ($dane->getKolekcjaPlikow() as $plik) {
             $zasoby[] = [
-                'id_zasobu' => $plik['id_zasobu'],
-                'pierwotna_nazwa' => $plik['nazwa']['pierwotna_z_rozszerzeniem']
+                'id_zasobu' => $plik->getEncjaPliku()->getIdZasobu(),
+                'pierwotna_nazwa' => $plik->getEncjaPliku()->getPierwotnaNazwaPliku()
             ];
         }
         return $zasoby;

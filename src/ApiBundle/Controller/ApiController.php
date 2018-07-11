@@ -12,6 +12,8 @@ use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
 use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
+use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
 use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\PrzetworzDane;
 use ApiBundle\Repository\PlikRepository;
@@ -48,20 +50,18 @@ class ApiController extends FOSRestController
 
             $daneWejsciowe = $przetworzDane->przygotujDaneWejscioweUpload($request);
 
-            $noweDane = $przetworzDane->przetworzDaneWejsciowe($daneWejsciowe);
-
-            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe['uzytkownik']['login'])) {
+            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe->getDaneUzytkownika()->getLogin())) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $noweDane['uzytkownik']['id'] = $uzytkownik->pobierzIdUzytkownikaPoLoginie(
-                $daneWejsciowe['uzytkownik']['login'], $daneWejsciowe['uzytkownik']['haslo']
-            );
+            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(//todo:wyniesc to wyżej
+                $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
+            ));
 
-            $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe, $noweDane);
-            $plikRepository->zapiszInformacjeOPlikuWBazie($noweDane, $przetworzDane);
+            $fizycznyPlik->zapiszPlikNaDysku($daneWejsciowe);
+            $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
 
-            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($noweDane);
+            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
 
             $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
 
@@ -256,7 +256,7 @@ class ApiController extends FOSRestController
      * @param $daneWejsciowe
      * @param $zasoby
      */
-    private function wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby): void
+    private function wyslijEmailaZInformacjaOUploadzie(DaneWejscioweUpload $daneWejsciowe, $zasoby): void
     {
         $kolejka = $this->get('api.kolejki');
 
@@ -265,7 +265,7 @@ class ApiController extends FOSRestController
             'odbiorca' => $this->getParameter('odbiorca_emailow'),
             'nadawca' => $this->getParameter('nadawca_emailow'),
             'wiadomosc' => $this->renderView("@Api/Email/upload.html.twig", [
-                'uzytkownik' => $daneWejsciowe['uzytkownik']['login'],
+                'uzytkownik' => $daneWejsciowe->getDaneUzytkownika()->getLogin(),
                 'lista_plikow' => $zasoby
             ])
         ];

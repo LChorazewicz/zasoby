@@ -11,6 +11,10 @@ namespace ApiBundle\Model;
 
 use ApiBundle\Exception\BladZapisuPlikuNaDyskuException;
 use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
+use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\Helper\EncjaPliku;
+use ApiBundle\Library\Plik\Plik;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -25,17 +29,19 @@ class FizycznyPlik
 
 
     /**
-     * @param $daneWejsciowe
-     * @param $noweDane
+     * @param $daneWejsciowe DaneWejscioweUpload
      * @throws BladZapisuPlikuNaDyskuException
      * @internal param UploadedFile $plik
      */
-    public function zapiszPlikNaDysku($daneWejsciowe, $noweDane)
+    public function zapiszPlikNaDysku($daneWejsciowe)
     {
         try {
             $i = 0;
-            foreach ($daneWejsciowe['pliki'] as $plik){
-                $this->zapiszPlik($plik, $noweDane['pliki'][$i]['sciezka_do_katalogu_na_dysku'], $noweDane['pliki'][$i]['nazwa']['nowa_z_rozszerzeniem']);
+            /**
+             * @var $plik EncjaPlikuNaPoziomieDanychWejsciowych
+             */
+            foreach ($daneWejsciowe->getKolekcjaPlikow() as $plik){
+                $this->zapiszPlik($plik->getEncjaPliku());
                 $i++;
             }
 
@@ -58,19 +64,17 @@ class FizycznyPlik
     }
 
     /**
-     * @param UploadedFile $plik
-     * @param $sciezka
-     * @param $nazwa
+     * @param EncjaPliku $plik
      * @throws RozmiarPlikuJestZbytDuzyException
      */
-    private function zapiszPlik(UploadedFile $plik, $sciezka, $nazwa): void
+    private function zapiszPlik(EncjaPliku $plik): void
     {
-        if ($plik->getSize() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
+        if ((int)$plik->getRozmiar() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
             throw new RozmiarPlikuJestZbytDuzyException;
         }
-        $katalog = $this->przygotujKatalogDoZapisu($sciezka);
+        $katalog = $this->przygotujKatalogDoZapisu($plik->getKatalogZapisu());
 
-        $plik->move($katalog, $nazwa);
+        (new Plik())->zapisz($plik->getSciezkaDoPlikuNaDysku(), $plik->getZawartosc());
     }
 
     public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)

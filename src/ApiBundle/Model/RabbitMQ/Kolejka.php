@@ -30,9 +30,9 @@ class Kolejka
 
     public function podniesKolejke($nazwa, $exchange)
     {
-        $this->kanal->queue_declare('kolejka_email', false, true, false, false);
-        $this->kanal->exchange_declare('kolejka_email', 'direct', false, true, false);
-        $this->kanal->queue_bind('kolejka_email', 'kolejka_email');
+        $this->kanal->queue_declare($nazwa, false, true, false, false);
+        $this->kanal->exchange_declare($exchange, 'direct', false, true, false);
+        $this->kanal->queue_bind($nazwa, $exchange);
         $this->info[] = "Dodałem kolejkę: " . $nazwa . " oraz exchange " . $exchange;
         return $this;
     }

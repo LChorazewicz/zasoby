@@ -4,6 +4,9 @@ namespace ApiBundle\Repository;
 
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\ZasobNieIstniejeException;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
+use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\Helper\EncjaPliku;
 use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\PrzetworzDane;
 
@@ -52,16 +55,18 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
     }
 
     /**
-     * @param $noweDane
-     * @param $przetworzDane
+     * @param $daneWejsciowe
      */
-    public function zapiszInformacjeOPlikuWBazie($noweDane, PrzetworzDane $przetworzDane): void
+    public function zapiszInformacjeOPlikuWBazie(DaneWejscioweUpload $daneWejsciowe): void
     {
         $managerEncji = $this->getEntityManager();
 
-        foreach ($noweDane['pliki'] as $danePliku) {
+        /**
+         * @var $danePliku EncjaPlikuNaPoziomieDanychWejsciowych
+         */
+        foreach ($daneWejsciowe->getKolekcjaPlikow() as $danePliku) {
             $encjaPliku = new Plik();
-            $encjaPliku = $przetworzDane->uzupelnijEncjePliku($encjaPliku, $danePliku, $noweDane['uzytkownik']);
+            $przetworzDane = PrzetworzDane::uzupelnijEncjePliku($encjaPliku, $danePliku->getEncjaPliku(), $daneWejsciowe->getDaneUzytkownika());
             $managerEncji->persist($encjaPliku);
             $managerEncji->flush();
         }
