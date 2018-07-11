@@ -66,8 +66,13 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
          */
         foreach ($daneWejsciowe->getKolekcjaPlikow() as $danePliku) {
             $encjaPliku = new Plik();
-            $uzupelnionaEncjaPliku = PrzetworzDane::uzupelnijEncjePliku($encjaPliku, $danePliku->getEncjaPliku(), $daneWejsciowe->getDaneUzytkownika());
-            $managerEncji->persist($uzupelnionaEncjaPliku);
+            $managerEncji->persist(
+                PrzetworzDane::uzupelnijEncjePliku(
+                    $encjaPliku,
+                    $danePliku->getEncjaPliku(),
+                    $daneWejsciowe->getDaneUzytkownika()
+                )
+            );
             $managerEncji->flush();
         }
     }
