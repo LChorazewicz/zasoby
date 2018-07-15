@@ -8,9 +8,11 @@ use ApiBundle\Exception\BladOdczytuPlikuZDyskuException;
 use ApiBundle\Exception\BladZapisuPlikuNaDyskuException;
 use ApiBundle\Exception\BrakLacznosciZBazaException;
 use ApiBundle\Exception\NiepelneDaneException;
+use ApiBundle\Exception\PustaKolekcjaException;
 use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
 use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
+use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
 use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
@@ -61,7 +63,7 @@ class ApiController extends FOSRestController
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(//todo:wyniesc to wyżej
+            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(
                 $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
             ));
 
@@ -85,6 +87,12 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
             $statusCode = Response::HTTP_FORBIDDEN;
+        } catch (PustaKolekcjaException $exception){
+            $statusCode = Response::HTTP_NOT_ACCEPTABLE;
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+            $statusCode = Response::HTTP_PRECONDITION_FAILED;
+        } catch (\Exception $exception){
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         }
 
         return $this->handleView($this->view($msg, $statusCode));
@@ -100,7 +108,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0]; $sciezka = null;
 
         try{
-            $przetworzDane = new PrzetworzDane($this->container);
+            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
             /**
              * @var $uzytkownik UzytkownikRepository
              */
@@ -148,7 +156,7 @@ class ApiController extends FOSRestController
         }
 
         if(!is_null($sciezka)){
-            return new BinaryFileResponse($sciezka, Response::HTTP_OK);
+            return new BinaryFileResponse($sciezka);
         }
 
         return $this->handleView($this->view($msg, $statusCode));
@@ -286,5 +294,127 @@ class ApiController extends FOSRestController
         ]);
 
         $kolejka->dodajWiadomosc($wiadomosc, 'kolejka_email');
+    }
+
+    /**
+     * @Route("/zasob/strumien", methods={"POST"})
+     * @param Request $request
+     * @return Response
+     * @throws UzytkownikNieIstniejeException
+     */
+    public function postZasobStrumienAction(Request $request)
+    {
+        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+
+        try {
+            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+
+            /**
+             * @var $uzytkownik UzytkownikRepository
+             */
+            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+
+            $daneWejsciowe = $przetworzDane->przygotujDaneWejsciowePatch($request);
+
+            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe->getDaneUzytkownika()->getLogin())) {
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(
+                $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
+            ));
+//
+//            $fizycznyPlik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
+//            $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
+//
+//            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
+//
+//            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
+
+            $msg = ['status' => 1, 'zasoby' => $zasoby];
+        } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
+        } catch (RozmiarPlikuJestZbytDuzyException $exception) {
+            $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
+        } catch (NiepelneDaneException $exception) {
+            $statusCode = Response::HTTP_BAD_REQUEST;
+        } catch (BrakLacznosciZBazaException $exception) {
+            $statusCode = Response::HTTP_GATEWAY_TIMEOUT;
+        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
+            $statusCode = Response::HTTP_FORBIDDEN;
+        } catch (UzytkownikNieIstniejeException $exception) {
+            $statusCode = Response::HTTP_FORBIDDEN;
+        } catch (PustaKolekcjaException $exception){
+            $statusCode = Response::HTTP_NOT_ACCEPTABLE;
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+            $statusCode = Response::HTTP_PRECONDITION_FAILED;
+        } catch (\Exception $exception){
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
+        }
+
+        return $this->handleView($this->view($msg, $statusCode));
+    }
+
+    /**
+     * @Route("/zasob/strumien", methods={"PATCH"})
+     * @param Request $request
+     * @return Response
+     * @throws UzytkownikNieIstniejeException
+     */
+    public function patchZasobStrumienAction(Request $request)
+    {
+        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+
+        try {
+            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
+            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+
+            /**
+             * @var $uzytkownik UzytkownikRepository
+             */
+            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+
+            $daneWejsciowe = $przetworzDane->przygotujDaneWejsciowePatch($request);
+
+            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe->getDaneUzytkownika()->getLogin())) {
+                throw new UzytkownikNiePosiadaUprawnienException();
+            }
+
+            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(
+                $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
+            ));
+//
+//            $fizycznyPlik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
+//            $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
+//
+//            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
+//
+//            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
+
+            $msg = ['status' => 1, 'zasoby' => $zasoby];
+        } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
+        } catch (RozmiarPlikuJestZbytDuzyException $exception) {
+            $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
+        } catch (NiepelneDaneException $exception) {
+            $statusCode = Response::HTTP_BAD_REQUEST;
+        } catch (BrakLacznosciZBazaException $exception) {
+            $statusCode = Response::HTTP_GATEWAY_TIMEOUT;
+        } catch (UzytkownikNiePosiadaUprawnienException $exception) {
+            $statusCode = Response::HTTP_FORBIDDEN;
+        } catch (UzytkownikNieIstniejeException $exception) {
+            $statusCode = Response::HTTP_FORBIDDEN;
+        } catch (PustaKolekcjaException $exception){
+            $statusCode = Response::HTTP_NOT_ACCEPTABLE;
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+            $statusCode = Response::HTTP_PRECONDITION_FAILED;
+        } catch (\Exception $exception){
+            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
+        }
+
+        return $this->handleView($this->view($msg, $statusCode));
     }
 }

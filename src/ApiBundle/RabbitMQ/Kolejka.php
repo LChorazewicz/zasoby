@@ -6,7 +6,7 @@
  * Time: 20:32
  */
 
-namespace ApiBundle\Model\RabbitMQ;
+namespace ApiBundle\RabbitMQ;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 

@@ -15,15 +15,35 @@ old_sound_rabbit_mq:
         KOLEJKA_WYSYLKA_EMAILOW:
             connection:       default
             exchange_options: {name: 'kolejka_email', type: direct}
+        KOLEJKA_ZAPIS_PLIKOW:
+            connection:       default
+            exchange_options: {name: 'kolejka_zapis_plikow', type: direct}
     consumers:
         KOLEJKA_WYSYLKA_EMAILOW:
             connection:       default
             queue_options:    {name: 'kolejka_email'}
             callback: api.email.consumer
             enable_logger: true
-
+        KOLEJKA_ZAPIS_PLIKOW:
+            connection:       default
+            queue_options:    {name: 'kolejka_zapis_plikow'}
+            callback: api.zapisz.plik.na.dysku.service
+            enable_logger: true
 
 services:
     api.email.consumer:
-        class: ApiBundle\Model\RabbitMQ\EmailConsumer
+        class: ApiBundle\RabbitMQ\Consumer\EmailConsumer
         arguments: ['@api.email', '@monolog.logger']
+
+    api.kolejki:
+        class: ApiBundle\RabbitMQ\Kolejka
+        arguments: [
+            '%queue_host%',
+            '%queue_port%',
+            '%queue_user%',
+            '%queue_password%',
+            '%queue_vhost%']
+
+    api.zapisz.plik.na.dysku.service:
+        class: ApiBundle\Services\ZapisPlikowNaDyskuService
+

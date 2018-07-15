@@ -9,9 +9,11 @@
 namespace ApiBundle\Library\Plik;
 
 
+use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Library\Generuj;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneUzytkownikaNaPoziomieDanychWejsciowych;
 use ApiBundle\Library\Helper\EncjaPliku;
+use ApiBundle\Library\WarunkiBrzegowe\Plik;
 use ApiBundle\Model\FizycznyPlik;
 
 class Base64
@@ -19,66 +21,65 @@ class Base64
     /**
      * @param $base64
      * @param $nazwa
-     * @param $katalogZapisuTymczasowego
-     * @param $katalogZapisu
+     * @param $katalogTymczasowy
+     * @param $katalogDocelowy
      * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych
      * @return EncjaPliku
      */
-    public function konwertujBase64DoEncjiPliku($base64, $nazwa, $katalogZapisuTymczasowego, $katalogZapisu, DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych)
+    public function konwertujBase64DoEncjiPliku($base64, $nazwa, $katalogTymczasowy, $katalogDocelowy, DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych)
     {
-        return $this->zwrocEncjePlikuZBase64($base64, $nazwa, $katalogZapisuTymczasowego, $katalogZapisu, $daneUzytkownikaNaPoziomieDanychWejsciowych);
+        return $this->zwrocEncjePlikuZBase64($base64, $nazwa, $katalogTymczasowy, $katalogDocelowy, $daneUzytkownikaNaPoziomieDanychWejsciowych);
     }
 
     /**
      * @param string $base64
      * @param string $pierwotnaNazwa
-     * @param string $katalogZapisuTymczasowego
-     * @param string $katalogDoZapisu
+     * @param string $katalogTymczasowy
+     * @param string $katalogDocelowy
      * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych
      * @return EncjaPliku
+     * @throws WarunkiBrzegoweNieZostalySpelnioneException
      */
-    private function zwrocEncjePlikuZBase64(string $base64, string $pierwotnaNazwa, string $katalogZapisuTymczasowego, string $katalogDoZapisu, DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych)
+    private function zwrocEncjePlikuZBase64(string $base64, string $pierwotnaNazwa, string $katalogTymczasowy, string $katalogDocelowy, DaneUzytkownikaNaPoziomieDanychWejsciowych $daneUzytkownikaNaPoziomieDanychWejsciowych)
     {
-        $base64 = str_replace('data:', '', $base64);
-        $base64 = str_replace('base64,', '', $base64);
-
-        $mimeTypeIBase64 = explode(';', $base64);
-
-        $odkodowanaZawartosc = base64_decode($mimeTypeIBase64[1]);
+        $daneBase64 = (new \ApiBundle\Library\Helper\DaneWejsciowe\Base64($base64, $pierwotnaNazwa));
 
         $nowaNazwaPliku = Generuj::UnikalnaNazwe();
-        $rozszerzenie = explode('.', $pierwotnaNazwa)[1];
 
-        $sciezkaZapisuTymczasowego = $katalogZapisuTymczasowego . $nowaNazwaPliku . '.' . $rozszerzenie;
-        $sciezkaZapisu = $katalogZapisuTymczasowego . $nowaNazwaPliku . '.' . $rozszerzenie;
+        $sciezkaZapisuTymczasowego = $katalogTymczasowy . $nowaNazwaPliku . '.' . $daneBase64->getRozszerzenie();
+        $sciezkaZapisuDocelowego = $katalogDocelowy . $nowaNazwaPliku . '.' . $daneBase64->getRozszerzenie();
 
         $encjaPliku = (new EncjaPliku)
             ->nazwa()
-                ->setPierwotnaNazwaPliku($pierwotnaNazwa)
-                ->setNowaNazwaPlikuZRozszerzeniem($nowaNazwaPliku . '.' .$rozszerzenie)
+                ->setPierwotnaNazwaPliku($daneBase64->getPierwotnaNazwa())
+                ->setNowaNazwaPlikuZRozszerzeniem($nowaNazwaPliku . '.' .$daneBase64->getRozszerzenie())
                 ->setNowaNazwaPlikuBezRozszerzenia($nowaNazwaPliku)
             ->wlasciwosc()
-                ->setMimeType($mimeTypeIBase64[0])
-                ->setRozszerzenie($rozszerzenie)
-                ->setZawartosc($odkodowanaZawartosc)
+                ->setMimeType($daneBase64->getMimeType())
+                ->setRozszerzenie($daneBase64->getRozszerzenie())
+                ->setZawartosc($daneBase64->getOdkodowanaZawartosc())
                 ->setDataDodania(new \DateTime())
                 ->setIdZasobu(Generuj::UnikalnaNazwe())
                 ->setRozmiar(0)
                 ->setZapisanyPlikTymczasowy(false)
                 ->setZapisanyPlikDocelowy(false)
             ->lokalizacja()
-                ->setKatalogZapisuDocelowego($katalogDoZapisu)
-                ->setKatalogZapisuTymczasowego($katalogZapisuTymczasowego)
-                ->setSciezkaDoPlikuDocelowego($sciezkaZapisu)
+                ->setKatalogZapisuDocelowego($katalogDocelowy)
+                ->setKatalogZapisuTymczasowego($katalogTymczasowy)
+                ->setSciezkaDoPlikuDocelowego($sciezkaZapisuDocelowego)
                 ->setSciezkaDoPlikuTymczasowego($sciezkaZapisuTymczasowego)
             ->daneUzytkownikaDodajcego()
                 ->setIdUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getId())
                 ->setLoginUzytkownikaDodajacego($daneUzytkownikaNaPoziomieDanychWejsciowych->getLogin());
 
+        if(!Plik::czyEncjaPlikuKwalifikujeSieDoZapisu($encjaPliku)){
+            return null;
+        }
+
         $encjaPliku = (new FizycznyPlik())->zapiszPlikTymczasowy($encjaPliku);
 
         $encjaPliku->wlasciwosc()
-            ->setRozmiar(filesize($sciezkaZapisu));
+            ->setRozmiar(filesize($sciezkaZapisuTymczasowego));
 
         return $encjaPliku;
     }

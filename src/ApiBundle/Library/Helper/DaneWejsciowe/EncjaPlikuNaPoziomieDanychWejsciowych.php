@@ -16,13 +16,13 @@ class EncjaPlikuNaPoziomieDanychWejsciowych
      * EncjaPlikuNaPoziomieDanychWejsciowych constructor.
      * @param string $pierwotna_nazwa
      * @param string $base64Pliku
-     * @param string $katalogDoZapisuTymczasowego
-     * @param string $katalogDoZapisu
+     * @param string $katalogTymczasowy
+     * @param string $katalogDocelowy
      * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownikDodajacy
      */
-    public function __construct(string $pierwotna_nazwa, string $base64Pliku, string $katalogDoZapisuTymczasowego, string $katalogDoZapisu, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownikDodajacy)
+    public function __construct(string $pierwotna_nazwa, string $base64Pliku, string $katalogTymczasowy, string $katalogDocelowy, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownikDodajacy)
     {
-        $this->encjaPliku = (new Base64())->konwertujBase64DoEncjiPliku($base64Pliku, $pierwotna_nazwa, $katalogDoZapisuTymczasowego, $katalogDoZapisu, $uzytkownikDodajacy);
+        $this->encjaPliku = (new Base64())->konwertujBase64DoEncjiPliku($base64Pliku, $pierwotna_nazwa, $katalogTymczasowy, $katalogDocelowy, $uzytkownikDodajacy);
     }
 
 

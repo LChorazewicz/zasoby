@@ -9,10 +9,11 @@
 namespace ApiBundle\Library\Helper\DaneWejsciowe;
 
 
+use ApiBundle\Exception\PustaKolekcjaException;
 use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
 
-class DaneWejscioweUpload
+class DaneWejscioweUpload implements DaneWejscioweInterface
 {
     private $token;
     private $login;
@@ -82,18 +83,28 @@ class DaneWejscioweUpload
      * @param array $kolekcjaPlikow
      * @param $uzytkownikaDodajacy DaneUzytkownikaNaPoziomieDanychWejsciowych
      * @return $this
+     * @throws PustaKolekcjaException
      */
     public function setKolekcjaPlikow($kolekcjaPlikow, $uzytkownikaDodajacy)
     {
         $kolekcja = [];
         foreach ($kolekcjaPlikow as $plik){
-            $kolekcja[] = new EncjaPlikuNaPoziomieDanychWejsciowych(
+            $obiekt =  new EncjaPlikuNaPoziomieDanychWejsciowych(
                 $plik->pierwotna_nazwa,
                 $plik->base64,
                 $this->params['katalog_do_zapisu_plikow_tymczasowych'],
                 $this->params['katalog_do_zapisu_plikow'] . Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/',
                 $uzytkownikaDodajacy);
+            if(is_null($obiekt->getEncjaPliku())){
+                continue;
+            }
+            $kolekcja[] = $obiekt;
         }
+
+        if(empty($kolekcja)){
+            throw new PustaKolekcjaException();
+        }
+
         $this->kolekcjaPlikow = $kolekcja;
         return $this;
     }

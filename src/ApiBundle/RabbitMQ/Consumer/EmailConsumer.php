@@ -6,7 +6,7 @@
  * Time: 15:10
  */
 
-namespace ApiBundle\Model\RabbitMQ;
+namespace ApiBundle\RabbitMQ\Consumer;
 
 
 use ApiBundle\Model\Mailer;

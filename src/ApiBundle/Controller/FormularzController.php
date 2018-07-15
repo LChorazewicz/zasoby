@@ -2,12 +2,11 @@
 
 namespace ApiBundle\Controller;
 
-use ApiBundle\Model\Guzzle\Fabryka;
-use Doctrine\DBAL\Types\BooleanType;
+use Doctrine\Common\Collections\ArrayCollection;
 use GuzzleHttp\Client;
-use Hshn\Base64EncodedFile\Form\Type\Base64EncodedFileType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
@@ -66,24 +65,15 @@ class FormularzController extends Controller
                 'haslo' => $dane['haslo']
             ];
 
-            $pliki = [];
-
-            /**
-             * @var $plik UploadedFile
-             */
-            foreach ($dane['pliki'] as $plik){
-                $pliki[] = [
-                    'pierwotna_nazwa' => $plik->getClientOriginalName(),
-                    'base64' => 'date:' . $plik->getMimeType() . ';base64,' . base64_encode(file_get_contents($plik->getRealPath()))
-                ];
+            if($this->wielkoscWszystkichZalaczonychPlikow($dane['pliki']) >= 2){
+                try{
+                    $odpowiedz = $this->wyslijPakietami($dane['pliki'], $daneDoWyslania);
+                }catch (\Exception $exception){
+                    die($exception);
+                }
+            }else{
+                $odpowiedz = $this->wyslijBezPakietow($daneDoWyslania, $dane['pliki']);
             }
-
-            $daneDoWyslania['pliki'] = $pliki;
-
-            $klient = new Client();
-            $odpowiedz = $klient->post('http://mojschowek.pl/api/zasob', [
-                'json' => $daneDoWyslania
-            ]);
 
             return new JsonResponse(json_decode($odpowiedz->getBody()->getContents()));
         }
@@ -195,5 +185,117 @@ class FormularzController extends Controller
         return $this->render('@Api/Formularz/put.html.twig', array(
             'pola' => $formularz->createView()
         ));
+    }
+
+    /**
+     * @param ArrayCollection $kolekcjaUploadedFile UploadedFile
+     * @return int
+     */
+    private function wielkoscWszystkichZalaczonychPlikow($kolekcjaUploadedFile)
+    {
+        $rozmiarSumaryczny = 0;
+        /**
+         * @var $plik UploadedFile
+         */
+        foreach ($kolekcjaUploadedFile as $plik){
+            $rozmiarSumaryczny = $rozmiarSumaryczny + $plik->getClientSize();
+        }
+
+        return $rozmiarSumaryczny;
+    }
+
+    /**
+     * @param ArrayCollection $kolekcjaUploadedFile UploadedFile
+     * @param $struktura
+     * @throws \Exception
+     */
+    private function wyslijPakietami($kolekcjaUploadedFile, $struktura)
+    {
+        $polaczenie = $this->otworzPolaczenieWysylkiPakietow();
+        /**
+         * @var $plik UploadedFile
+         */
+        foreach ($kolekcjaUploadedFile as $plik){
+            $handle = fopen($plik->getRealPath(), "r");
+
+            $struktura['dane_wejsciowe'] = [];
+            $struktura['dane_wejsciowe']['szkic'] = true;
+            $struktura['dane_wejsciowe']['pierwotna_nazwa'] = $plik->getClientOriginalName();
+            $struktura['dane_wejsciowe']['mime_type'] = $plik->getClientMimeType();
+            $struktura['dane_wejsciowe']['rozmiar'] = $plik->getClientSize();
+            $struktura['dane_wejsciowe']['koniec'] = false;
+            $struktura['dane_wejsciowe']['strumien'] = false;
+
+            $init = $this->wyslijPakiet($polaczenie, 'patch', $struktura);
+
+            if($init->status !== 1){
+                throw new \Exception("Bład komunikacji");
+            }
+            $struktura['dane_wejsciowe'] = [];
+            $struktura['dane_wejsciowe']['id_zasobu'] = $init->id_zasobu;
+            $struktura['dane_wejsciowe']['szkic'] = false;
+            $struktura['dane_wejsciowe']['strumien'] = true;
+            $struktura['dane_wejsciowe']['koniec'] = false;
+            if ($handle) { $i = 0;
+                while (($line = fgets($handle))) {
+                    $struktura['pakiet'] = $line;
+                    $this->wyslijPakiet($polaczenie, 'patch', $struktura);$i++;
+                }
+                fclose($handle);
+                $struktura['dane_wejsciowe'] = [];
+                $struktura['dane_wejsciowe']['id_zasobu'] = $init->id_zasobu;
+                $struktura['dane_wejsciowe']['szkic'] = false;
+                $struktura['dane_wejsciowe']['strumien'] = false;
+                $struktura['dane_wejsciowe']['koniec'] = true;
+
+                $this->wyslijPakiet($polaczenie, 'patch', $struktura);
+
+            } else {
+                throw new \Exception("Nie mogę otworzyć pliku");
+            }
+        }
+    }
+
+    /**
+     * @param $struktura
+     * @param ArrayCollection $kolekcjaUploadedFile
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    private function wyslijBezPakietow($struktura, $kolekcjaUploadedFile)
+    {
+        $pliki = [];
+        /**
+         * @var $plik UploadedFile
+         */
+        foreach ($kolekcjaUploadedFile as $plik){
+            $pliki[] = [
+                'pierwotna_nazwa' => $plik->getClientOriginalName(),
+                'base64' => 'data:' . $plik->getMimeType() . ';base64,' . base64_encode(file_get_contents($plik->getRealPath())),
+            ];
+        }
+        $struktura['pliki'] = $pliki;
+
+        $klient = new Client(['timeout' => 15]);
+        $odpowiedz = $klient->post('http://mojschowek.pl/api/zasob', [
+            'json' => $struktura
+        ]);
+        return $odpowiedz;
+    }
+
+    /**
+     * @param $uchwyt Client
+     * @param $metoda
+     * @param $struktura
+     * @return mixed
+     */
+    private function wyslijPakiet($uchwyt, $metoda, $struktura){
+//        $uchwyt->$metoda('http://mojschowek.pl/api/zasob', [
+//            'json' => $struktura
+//        ]);
+        return json_decode(json_encode(['status' => 1, 'id_zasobu' => 'niby_id']));
+    }
+
+    private function otworzPolaczenieWysylkiPakietow(){
+        return new Client(['timeout' => 15]);
     }
 }

@@ -11,7 +11,10 @@ namespace ApiBundle\Model;
 
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\NiepelneDaneException;
+use ApiBundle\Exception\PustaKolekcjaException;
+use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneUzytkownikaNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejsciowePatch;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
 use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
 use ApiBundle\Library\Helper\EncjaPliku;
@@ -40,12 +43,15 @@ class PrzetworzDane
      * @param Request $request
      * @return DaneWejscioweUpload
      * @throws NiepelneDaneException
+     * @throws PustaKolekcjaException
      */
     public function przygotujDaneWejscioweUpload(Request $request)
     {
         try{
             $encja = new DaneWejscioweUpload(json_decode($request->getContent()), $this->kontenerParametrow);
-        }catch (\Exception $exception){
+        }catch (PustaKolekcjaException $exception){
+            throw new PustaKolekcjaException();
+        }catch (NiepelneDaneException $exception){
             throw new NiepelneDaneException();
         }
 
@@ -74,26 +80,6 @@ class PrzetworzDane
         }
 
         return $daneWejsciowe;
-    }
-
-    /**
-     * @param $daneWejsciowe DaneWejscioweUpload
-     * @return array
-     */
-    public function przetworzDaneWejsciowe($daneWejsciowe)
-    {
-        $odpowiedz = [];
-
-        foreach ($daneWejsciowe->getKolekcjaPlikow() as $plik){
-            $odpowiedz['pliki'][] = $plik;
-        }
-
-        $odpowiedz['uzytkownik'] = [
-            'id' => null,
-            'login' => $aDaneWejsciowe['uzytkownik']['login']
-        ];
-
-        return $odpowiedz;
     }
 
     /**
@@ -190,6 +176,22 @@ class PrzetworzDane
         }
 
         return $daneWejsciowe;
+    }
+
+    /**
+     * @param Request $request
+     * @return DaneWejsciowePatch
+     * @throws NiepelneDaneException
+     */
+    public function przygotujDaneWejsciowePatch($request)
+    {
+        try{
+            $encja = new DaneWejsciowePatch(json_decode($request->getContent()), $this->kontenerParametrow);
+        }catch (NiepelneDaneException $exception){
+            throw new NiepelneDaneException();
+        }
+
+        return $encja;
     }
 
 }
