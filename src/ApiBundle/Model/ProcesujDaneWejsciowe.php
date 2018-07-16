@@ -10,23 +10,22 @@ namespace ApiBundle\Model;
 
 
 use ApiBundle\Entity\Plik;
+use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\NiepelneDaneException;
 use ApiBundle\Exception\PustaKolekcjaException;
-use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneUzytkownikaNaPoziomieDanychWejsciowych;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejsciowePatch;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
+use ApiBundle\Helper\EncjaPliku;
+use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweAbstractPatch;
 use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
-use ApiBundle\Library\Helper\EncjaPliku;
-use ApiBundle\Library\Plik\Generuj;
+use ApiBundle\Model\Dane\Metody\Upload;
+use ApiBundle\Model\Dane\Metody\UploadInterface;
+use ApiBundle\Model\DaneWejsciowe\DaneWejscioweInterface;
+use ApiBundle\Model\DaneWejsciowe\Metody\Delete;
+use ApiBundle\Model\DaneWejsciowe\Metody\Download;
+use ApiBundle\Model\DaneWejsciowe\Metody\Put;
 use ApiBundle\Services\KontenerParametrow;
-use ApiBundle\Utils\Data;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 
-class PrzetworzDane
+class ProcesujDaneWejsciowe
 {
     /**
      * @var $kontenerParametrow KontenerParametrow
@@ -41,14 +40,13 @@ class PrzetworzDane
 
     /**
      * @param Request $request
-     * @return DaneWejscioweUpload
+     * @return DaneUpload
      * @throws NiepelneDaneException
      * @throws PustaKolekcjaException
      */
     public function przygotujDaneWejscioweUpload(Request $request)
     {
         try{
-            $encja = new DaneWejscioweUpload(json_decode($request->getContent()), $this->kontenerParametrow);
         }catch (PustaKolekcjaException $exception){
             throw new PustaKolekcjaException();
         }catch (NiepelneDaneException $exception){
@@ -83,13 +81,13 @@ class PrzetworzDane
     }
 
     /**
-     * @param Plik $encjaPliku
      * @param EncjaPliku $danePliku
-     * @param DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik
+     * @param Uzytkownik $uzytkownik
      * @return Plik
      */
-    public static function uzupelnijEncjePliku(Plik $encjaPliku, EncjaPliku $danePliku, DaneUzytkownikaNaPoziomieDanychWejsciowych $uzytkownik)
+    public static function uzupelnijEncjePliku(EncjaPliku $danePliku, Uzytkownik $uzytkownik)
     {
+        $encjaPliku = new Plik();
         $encjaPliku->setSciezka($danePliku->getSciezkaDoPlikuDocelowego());
         $encjaPliku->setNazwaZasobu($danePliku->getNowaNazwaPlikuZRozszerzeniem());
         $encjaPliku->setPierwotnaNazwa($danePliku->getPierwotnaNazwaPliku());
@@ -102,22 +100,21 @@ class PrzetworzDane
         return $encjaPliku;
     }
 
-
     /**
-     * @param $dane
+     * @param UploadInterface $dane
      * @return array
      */
-    public function pobierzIdWszystkichZasobowDlaTegoZadania(DaneWejscioweUpload $dane): array
+    public function pobierzIdWszystkichZasobowDlaTegoZadania(UploadInterface $dane): array
     {
         $zasoby = [];
 
         /**
-         * @var $plik EncjaPlikuNaPoziomieDanychWejsciowych
+         * @var $plik EncjaPliku
          */
-        foreach ($dane->getKolekcjaPlikow() as $plik) {
+        foreach ($dane->pobierzKolekcjePlikow() as $plik) {
             $zasoby[] = [
-                'id_zasobu' => $plik->getEncjaPliku()->getIdZasobu(),
-                'pierwotna_nazwa' => $plik->getEncjaPliku()->getPierwotnaNazwaPliku()
+                'id_zasobu' => $plik->getIdZasobu(),
+                'pierwotna_nazwa' => $plik->getPierwotnaNazwaPliku()
             ];
         }
         return $zasoby;
@@ -180,18 +177,42 @@ class PrzetworzDane
 
     /**
      * @param Request $request
-     * @return DaneWejsciowePatch
+     * @return DaneWejscioweAbstractPatch
      * @throws NiepelneDaneException
      */
     public function przygotujDaneWejsciowePatch($request)
     {
         try{
-            $encja = new DaneWejsciowePatch(json_decode($request->getContent()), $this->kontenerParametrow);
+            $encja = new DaneWejscioweAbstractPatch(json_decode($request->getContent()), $this->kontenerParametrow);
         }catch (NiepelneDaneException $exception){
             throw new NiepelneDaneException();
         }
 
         return $encja;
+    }
+
+    /**
+     * @param DaneWejscioweInterface $daneWejsciowe
+     * @param KontenerParametrow $kontenerParametrow
+     * @return UploadInterface
+     */
+    public function przygotujDane(DaneWejscioweInterface $daneWejsciowe, KontenerParametrow $kontenerParametrow)
+    {
+        $przygotowaneDaneWejsciowe = null;
+
+        switch ($daneWejsciowe::getNazwaMetodyApi()){
+            case Upload::class:{
+                $przygotowaneDaneWejsciowe = (
+                    new Upload($daneWejsciowe->getDaneUzytkownika(), $daneWejsciowe->getDaneWejsciowe(), $daneWejsciowe::getNazwaMetodyApi(), $kontenerParametrow)
+                )->pobierz();
+                break;
+            }
+            case Download::class:{}
+            case Put::class:{}
+            case Delete::class:{}
+        }
+
+        return $przygotowaneDaneWejsciowe;
     }
 
 }

@@ -11,12 +11,10 @@ namespace ApiBundle\Model;
 
 use ApiBundle\Exception\BladZapisuPlikuNaDyskuException;
 use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
-use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
-use ApiBundle\Library\Helper\EncjaPliku;
-use ApiBundle\Library\Plik\Plik;
+use ApiBundle\Helper\EncjaPliku;
+use ApiBundle\Library\Plik;
+use ApiBundle\Model\Dane\Metody\UploadInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FizycznyPlik
 {
@@ -33,18 +31,14 @@ class FizycznyPlik
 
 
     /**
-     * @param $daneWejsciowe DaneWejscioweUpload
+     * @param UploadInterface $upload
      * @throws BladZapisuPlikuNaDyskuException
      */
-    public function zapiszPlikiDoceloweNaDysku($daneWejsciowe)
+    public function zapiszPlikiDoceloweNaDysku(UploadInterface $upload)
     {
         try {
-            $i = 0;
-            /**
-             * @var $plik EncjaPlikuNaPoziomieDanychWejsciowych
-             */
-            foreach ($daneWejsciowe->getKolekcjaPlikow() as $plik){
-                $this->zapiszPlikDocelowy($plik->getEncjaPliku());$i++;
+            foreach ($upload->pobierzKolekcjePlikow() as $plik){
+                $this->zapiszPlikDocelowy($plik);
             }
 
         } catch (FileException $exception) {
@@ -104,10 +98,5 @@ class FizycznyPlik
     public function zapiszPlikTymczasowy(EncjaPliku $encjaPliku)
     {
         return $this->zapiszPlik($encjaPliku, false);
-    }
-
-    public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)
-    {
-        return file_exists($sciezkaDoZasobu);
     }
 }

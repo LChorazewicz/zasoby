@@ -11,7 +11,7 @@ namespace ApiBundle\Library\Helper\DaneWejsciowe;
 
 use ApiBundle\Services\KontenerParametrow;
 
-class DaneWejsciowePatch implements DaneWejscioweInterface
+class DaneWejscioweAbstractPatch implements DaneWejscioweAbstractInterface
 {
     private $login;
     private $haslo;
@@ -56,7 +56,7 @@ class DaneWejsciowePatch implements DaneWejscioweInterface
     {
         $this->login = $login;
         $this->haslo = $haslo;
-        $this->daneUzytkownika = new DaneUzytkownikaNaPoziomieDanychWejsciowych($login, $haslo);
+        $this->daneUzytkownika = new Uzytkownik($login, $haslo);
         return $this;
     }
 
@@ -70,7 +70,7 @@ class DaneWejsciowePatch implements DaneWejscioweInterface
     }
 
     /**
-     * @return DaneUzytkownikaNaPoziomieDanychWejsciowych
+     * @return Uzytkownik
      */
     public function getDaneUzytkownika()
     {

@@ -9,7 +9,8 @@
 namespace ApiBundle\Library\WarunkiBrzegowe;
 
 
-use ApiBundle\Library\Helper\EncjaPliku;
+
+use ApiBundle\Helper\EncjaPliku;
 
 class Plik
 {

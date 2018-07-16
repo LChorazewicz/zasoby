@@ -14,10 +14,11 @@ use ApiBundle\Exception\UzytkownikNieIstniejeException;
 use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
 use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweUpload;
-use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
+use ApiBundle\Library\WarunkiBrzegowe\Uprawnienia;
+use ApiBundle\Model\Dane\Metody\UploadInterface;
+use ApiBundle\Model\DaneWejsciowe\Metody\Upload;
 use ApiBundle\Model\FizycznyPlik;
-use ApiBundle\Model\PrzetworzDane;
+use ApiBundle\Model\ProcesujDaneWejsciowe;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use ApiBundle\Services\KontenerParametrow;
@@ -31,11 +32,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApiController extends FOSRestController
 {
-    private $kontenerParametrow;
+    private $plikRepository;
+    private $uzytkownik;
+    private $plik;
+    private $procesorDanychWejsciowych;
 
     public function __construct(KontenerParametrow $kontenerParametrow)
     {
-        $this->kontenerParametrow = $kontenerParametrow;
+        $this->plik = new FizycznyPlik($this->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
+        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe($kontenerParametrow);
+        $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+        $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
     }
     /**
      * @Route("/zasob", methods={"POST"})
@@ -48,29 +55,27 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
 
         try {
-            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
-            $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
-            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
-
             /**
-             * @var $uzytkownik UzytkownikRepository
+             * @note: Obiekt reprezentujący podstawowe dane wejściowe metody Upload
              */
-            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+            $metoda = new Upload($request, $this->get('doctrine'));
 
-            $daneWejsciowe = $przetworzDane->przygotujDaneWejscioweUpload($request);
+            $uprawnienia = new Uprawnienia();
+            $uzytkownikMozeKontynuowac = $uprawnienia->sprawdzUprawnieniaDoMetody($metoda);
 
-            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe->getDaneUzytkownika()->getLogin())) {
+            if(!$uzytkownikMozeKontynuowac){
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(
-                $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
-            ));
+            $daneWejsciowe = $this->procesorDanychWejsciowych->przygotujDane(
+                $metoda, $this->get('api.kontener.parametrow')
+            );
 
-            $fizycznyPlik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
-            $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
 
-            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
+            $this->plik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
+            $this->plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
+
+            $zasoby = $this->procesorDanychWejsciowych->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
 
             $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
 
@@ -108,7 +113,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0]; $sciezka = null;
 
         try{
-            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
             /**
              * @var $uzytkownik UzytkownikRepository
              */
@@ -172,7 +177,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
 
         try{
-            $przetworzDane = new PrzetworzDane($this->container);
+            $przetworzDane = new ProcesujDaneWejsciowe($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
              */
@@ -225,7 +230,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
 
         try{
-            $przetworzDane = new PrzetworzDane($this->container);
+            $przetworzDane = new ProcesujDaneWejsciowe($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
              */
@@ -268,10 +273,10 @@ class ApiController extends FOSRestController
     }
 
     /**
-     * @param $daneWejsciowe
+     * @param UploadInterface $upload
      * @param $zasoby
      */
-    private function wyslijEmailaZInformacjaOUploadzie(DaneWejscioweUpload $daneWejsciowe, $zasoby): void
+    private function wyslijEmailaZInformacjaOUploadzie(UploadInterface $upload, $zasoby): void
     {
         $kolejka = $this->get('api.kolejki');
 
@@ -280,7 +285,7 @@ class ApiController extends FOSRestController
             'odbiorca' => $this->getParameter('odbiorca_emailow'),
             'nadawca' => $this->getParameter('nadawca_emailow'),
             'wiadomosc' => $this->renderView("@Api/Email/upload.html.twig", [
-                'uzytkownik' => $daneWejsciowe->getDaneUzytkownika()->getLogin(),
+                'uzytkownik' => $upload->pobierzDaneUzytkownika()->getLogin(),
                 'lista_plikow' => $zasoby
             ])
         ];
@@ -307,7 +312,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
 
         try {
-            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
             $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
             $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
 
@@ -333,7 +338,7 @@ class ApiController extends FOSRestController
 //
 //            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
 
-            $msg = ['status' => 1, 'zasoby' => $zasoby];
+//            $msg = ['status' => 1, 'zasoby' => $zasoby];
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {
@@ -368,7 +373,7 @@ class ApiController extends FOSRestController
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
 
         try {
-            $przetworzDane = new PrzetworzDane($this->kontenerParametrow);
+            $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
             $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
             $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
 

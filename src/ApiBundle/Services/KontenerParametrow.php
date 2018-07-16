@@ -21,8 +21,10 @@ class KontenerParametrow
     {
         $this->container = $container;
     }
-    public function pobierzParametrZConfigu($nazwa)
+    public function pobierz($nazwa)
     {
         return $this->container->getParameter($nazwa);
     }
+
+
 }

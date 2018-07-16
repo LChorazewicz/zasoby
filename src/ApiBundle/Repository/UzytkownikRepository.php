@@ -41,6 +41,20 @@ class UzytkownikRepository extends \Doctrine\ORM\EntityRepository
         return $encja->getId();
     }
 
+    public function pobierzDaneUzytkownikaPoLoginieIHasle($login, $haslo)
+    {
+        /**
+         * @var $id Uzytkownik
+         */
+        $encja = $this->findOneBy(['login' => $login, 'haslo' => $haslo]);
+
+        if(!$encja instanceof Uzytkownik){
+            throw new UzytkownikNieIstniejeException();
+        }
+
+        return $encja;
+    }
+
     public function czyUzytkownikMozeUsunacZasob($id_uzytkownik, $id_zasobu)
     {
         /**

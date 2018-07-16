@@ -13,7 +13,7 @@ services:
         class: ApiBundle\Model\Mailer
         arguments: ['@service_container']
 
-    ApiBundle\Services\KontenerParametrow:
+    api.kontener.parametrow:
         arguments: ['@service_container']
 
     api.logger:

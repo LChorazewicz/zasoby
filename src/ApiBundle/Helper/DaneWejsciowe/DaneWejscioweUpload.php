@@ -13,7 +13,7 @@ use ApiBundle\Exception\PustaKolekcjaException;
 use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
 
-class DaneWejscioweUpload implements DaneWejscioweInterface
+class DaneUpload
 {
     private $token;
     private $login;
@@ -81,7 +81,7 @@ class DaneWejscioweUpload implements DaneWejscioweInterface
 
     /**
      * @param array $kolekcjaPlikow
-     * @param $uzytkownikaDodajacy DaneUzytkownikaNaPoziomieDanychWejsciowych
+     * @param $uzytkownikaDodajacy Uzytkownik
      * @return $this
      * @throws PustaKolekcjaException
      */
@@ -107,21 +107,5 @@ class DaneWejscioweUpload implements DaneWejscioweInterface
 
         $this->kolekcjaPlikow = $kolekcja;
         return $this;
-    }
-
-    private function setDaneUzytkownika($login, $haslo)
-    {
-        $this->login = $login;
-        $this->haslo = $haslo;
-        $this->daneUzytkownika = new DaneUzytkownikaNaPoziomieDanychWejsciowych($login, $haslo);
-        return $this;
-    }
-
-    /**
-     * @return DaneUzytkownikaNaPoziomieDanychWejsciowych
-     */
-    public function getDaneUzytkownika()
-    {
-        return $this->daneUzytkownika;
     }
 }

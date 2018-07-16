@@ -6,7 +6,7 @@
  * Time: 17:57
  */
 
-namespace ApiBundle\Library\Helper;
+namespace ApiBundle\Helper;
 
 use DateTime;
 

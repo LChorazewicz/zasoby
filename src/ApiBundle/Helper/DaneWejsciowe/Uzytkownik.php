@@ -6,10 +6,10 @@
  * Time: 10:23
  */
 
-namespace ApiBundle\Library\Helper\DaneWejsciowe;
+namespace ApiBundle\Helper\DaneWejsciowe;
 
 
-class DaneUzytkownikaNaPoziomieDanychWejsciowych
+class Uzytkownik
 {
 
     /**
@@ -23,7 +23,7 @@ class DaneUzytkownikaNaPoziomieDanychWejsciowych
     /**
      * @var int
      */
-    private $id;
+    private $id = 0;
 
     /**
      * DaneUzytkownikaNaPoziomieDanychWejsciowych constructor.
@@ -34,7 +34,6 @@ class DaneUzytkownikaNaPoziomieDanychWejsciowych
     {
         $this->login = $login;
         $this->haslo = $haslo;
-        $this->id = 0;
     }
 
     /**
