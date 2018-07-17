@@ -9,6 +9,7 @@ use ApiBundle\Exception\BladZapisuPlikuNaDyskuException;
 use ApiBundle\Exception\BrakLacznosciZBazaException;
 use ApiBundle\Exception\NiepelneDaneException;
 use ApiBundle\Exception\PustaKolekcjaException;
+use ApiBundle\Exception\RozmiarKolekcjiPlikowJestZbytDuzyException;
 use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
 use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
@@ -41,6 +42,7 @@ class ApiController extends FOSRestController
         $this->plik = new FizycznyPlik();
         $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe();
     }
+
     /**
      * @Route("/zasob", methods={"POST"})
      * @param Request $request
@@ -49,7 +51,8 @@ class ApiController extends FOSRestController
      */
     public function postZasobAction(Request $request)
     {
-        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+        $statusCode = Response::HTTP_CREATED;
+        $msg = ['status' => 0];
 
         $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
         $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
@@ -63,7 +66,7 @@ class ApiController extends FOSRestController
             $uprawnienia = new Uprawnienia();
             $uzytkownikMozeKontynuowac = $uprawnienia->sprawdzUprawnieniaDoMetody($metoda);
 
-            if(!$uzytkownikMozeKontynuowac){
+            if (!$uzytkownikMozeKontynuowac) {
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
@@ -83,6 +86,8 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {
             $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
+        } catch (RozmiarKolekcjiPlikowJestZbytDuzyException $exception) {
+            $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
         } catch (NiepelneDaneException $exception) {
             $statusCode = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
@@ -91,11 +96,11 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
             $statusCode = Response::HTTP_FORBIDDEN;
-        } catch (PustaKolekcjaException $exception){
+        } catch (PustaKolekcjaException $exception) {
             $statusCode = Response::HTTP_NOT_ACCEPTABLE;
-        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception) {
             $statusCode = Response::HTTP_PRECONDITION_FAILED;
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         }
 
@@ -109,9 +114,11 @@ class ApiController extends FOSRestController
      */
     public function getZasobAction(Request $request)
     {
-        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0]; $sciezka = null;
+        $statusCode = Response::HTTP_CREATED;
+        $msg = ['status' => 0];
+        $sciezka = null;
 
-        try{
+        try {
             $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -159,7 +166,7 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_FORBIDDEN;
         }
 
-        if(!is_null($sciezka)){
+        if (!is_null($sciezka)) {
             return new BinaryFileResponse($sciezka);
         }
 
@@ -173,9 +180,10 @@ class ApiController extends FOSRestController
      */
     public function deleteZasobAction(Request $request)
     {
-        $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
+        $statusCode = Response::HTTP_ACCEPTED;
+        $msg = ['status' => 0];
 
-        try{
+        try {
             $przetworzDane = new ProcesujDaneWejsciowe($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -226,9 +234,10 @@ class ApiController extends FOSRestController
      */
     public function putZasobAction(Request $request)
     {
-        $statusCode = Response::HTTP_ACCEPTED; $msg = ['status' => 0];
+        $statusCode = Response::HTTP_ACCEPTED;
+        $msg = ['status' => 0];
 
-        try{
+        try {
             $przetworzDane = new ProcesujDaneWejsciowe($this->container);
             /**
              * @var $uzytkownik UzytkownikRepository
@@ -308,7 +317,8 @@ class ApiController extends FOSRestController
      */
     public function postZasobStrumienAction(Request $request)
     {
-        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+        $statusCode = Response::HTTP_CREATED;
+        $msg = ['status' => 0];
 
         try {
             $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
@@ -350,11 +360,11 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
             $statusCode = Response::HTTP_FORBIDDEN;
-        } catch (PustaKolekcjaException $exception){
+        } catch (PustaKolekcjaException $exception) {
             $statusCode = Response::HTTP_NOT_ACCEPTABLE;
-        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception) {
             $statusCode = Response::HTTP_PRECONDITION_FAILED;
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         }
 
@@ -369,7 +379,8 @@ class ApiController extends FOSRestController
      */
     public function patchZasobStrumienAction(Request $request)
     {
-        $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+        $statusCode = Response::HTTP_CREATED;
+        $msg = ['status' => 0];
 
         try {
             $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
@@ -411,11 +422,11 @@ class ApiController extends FOSRestController
             $statusCode = Response::HTTP_FORBIDDEN;
         } catch (UzytkownikNieIstniejeException $exception) {
             $statusCode = Response::HTTP_FORBIDDEN;
-        } catch (PustaKolekcjaException $exception){
+        } catch (PustaKolekcjaException $exception) {
             $statusCode = Response::HTTP_NOT_ACCEPTABLE;
-        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception){
+        } catch (WarunkiBrzegoweNieZostalySpelnioneException $exception) {
             $statusCode = Response::HTTP_PRECONDITION_FAILED;
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         }
 

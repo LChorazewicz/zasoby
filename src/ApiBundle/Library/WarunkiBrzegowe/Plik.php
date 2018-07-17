@@ -11,6 +11,7 @@ namespace ApiBundle\Library\WarunkiBrzegowe;
 
 
 use ApiBundle\Helper\EncjaPliku;
+use ApiBundle\Model\Dane\Metody\UploadInterface;
 use ApiBundle\Services\KontenerParametrow;
 
 class Plik
@@ -27,6 +28,7 @@ class Plik
     {
         return self::sprawdzMimeType($encjaPliku->getMimeType()) &&
             self::sprawdzRozmiar($encjaPliku->getRozmiar());
+
     }
 
     /**
@@ -73,5 +75,24 @@ class Plik
     public static function sprawdzRozmiar($rozmiar)
     {
         return !(($rozmiar / 1024 / 1024) > self::$maksymalnyRozmiarPlikuWMegaBajtach);
+    }
+
+    /**
+     * @param $kolekcja
+     * @param $maksymalnyRozmiar
+     * @return bool
+     */
+    public static function rozmiarKolekcjiPlikowJestWiekszyNiz($kolekcja, $maksymalnyRozmiar)
+    {
+        $rozmiar = 0;
+
+        /**
+         * @var $plik EncjaPliku
+         */
+        foreach ($kolekcja as $plik){
+            $rozmiar = $rozmiar + $plik->getRozmiar();
+        }
+
+        return $rozmiar > $maksymalnyRozmiar;
     }
 }

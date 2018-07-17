@@ -11,12 +11,14 @@ namespace ApiBundle\Model\Dane\Metody;
 
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\PustaKolekcjaException;
+use ApiBundle\Exception\RozmiarKolekcjiPlikowJestZbytDuzyException;
 use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\Plik;
 use ApiBundle\Model\Dane\DaneAbstract;
 use ApiBundle\Model\Dane\DaneInterface;
 use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
+use ApiBundle\Library\WarunkiBrzegowe\Plik as WarunkiBrzegowe;
 
 class Upload extends DaneAbstract implements DaneInterface, UploadInterface
 {
@@ -25,6 +27,13 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
      */
     private $kolekcjaPlikow;
 
+    /**
+     * Upload constructor.
+     * @param Uzytkownik $uzytkownik
+     * @param $daneWejsciowe
+     * @param $nazwaMetodyApi
+     * @param KontenerParametrow $kontenerParametrow
+     */
     public function __construct(Uzytkownik $uzytkownik, $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
     {
         parent::__construct($uzytkownik, '', $nazwaMetodyApi, $kontenerParametrow);
@@ -35,13 +44,13 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
      * @param $kolekcjaPlikow
      * @param $uzytkownikaDodajacy
      * @throws PustaKolekcjaException
+     * @throws RozmiarKolekcjiPlikowJestZbytDuzyException
      */
     private function setKolekcjaPlikow($kolekcjaPlikow, $uzytkownikaDodajacy)
     {
         $kolekcja = [];
 
         foreach ($kolekcjaPlikow as $plik) {
-
             $obiekt = (new Plik())->konwertujBase64DoEncjiPliku(
                 $plik->base64,
                 $plik->pierwotna_nazwa,
@@ -57,6 +66,10 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
 
         if (empty($kolekcja)) {
             throw new PustaKolekcjaException();
+        }
+
+        if(WarunkiBrzegowe::rozmiarKolekcjiPlikowJestWiekszyNiz($kolekcja, $this->kontenerParametrow()->pobierz('maksymalny_rozmiar_kolekcji_plikow_w_megabajtach'))){
+            throw new RozmiarKolekcjiPlikowJestZbytDuzyException();
         }
 
         $this->kolekcjaPlikow = $kolekcja;
