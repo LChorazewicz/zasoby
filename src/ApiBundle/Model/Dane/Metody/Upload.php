@@ -27,8 +27,8 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
 
     public function __construct(Uzytkownik $uzytkownik, $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
     {
-        parent::__construct($uzytkownik, $daneWejsciowe->id_zasobu, $nazwaMetodyApi, $kontenerParametrow);
-        $this->setKolekcjaPlikow($daneWejsciowe->pliki, $this->getDaneUzytkownika());
+        parent::__construct($uzytkownik, '', $nazwaMetodyApi, $kontenerParametrow);
+        $this->setKolekcjaPlikow($daneWejsciowe->pliki, $this->pobierzDaneUzytkownika());
     }
 
     /**
@@ -43,8 +43,8 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
         foreach ($kolekcjaPlikow as $plik){
 
             $obiekt = (new Plik())->konwertujBase64DoEncjiPliku(
-                $plik->pierwotna_nazwa,
                 $plik->base64,
+                $plik->pierwotna_nazwa,
                 $this->zmienna('katalog_do_zapisu_plikow_tymczasowych'),
                 $this->zmienna('katalog_do_zapisu_plikow') . Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/',
                 $uzytkownikaDodajacy);
@@ -75,8 +75,11 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
         return $this->kolekcjaPlikow;
     }
 
+    /**
+     * @return Uzytkownik
+     */
     public function pobierzDaneUzytkownika()
     {
-        return $this->pobierzDaneUzytkownika();
+        return $this->daneUzytkownika();
     }
 }

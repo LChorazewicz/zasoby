@@ -9,6 +9,7 @@
 namespace ApiBundle\Library\Helper\DaneWejsciowe;
 
 
+use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Services\KontenerParametrow;
 
 class DaneWejscioweAbstractPatch implements DaneWejscioweAbstractInterface
@@ -93,5 +94,21 @@ class DaneWejscioweAbstractPatch implements DaneWejscioweAbstractInterface
     public function getDaneWejsciowe()
     {
         return $this->daneWejsciowe;
+    }
+
+    /**
+     * @return Uzytkownik
+     */
+    public function daneUzytkownika()
+    {
+        // TODO: Implement daneUzytkownika() method.
+    }
+
+    /**
+     * @return \stdClass
+     */
+    public function daneWejsciowe()
+    {
+        // TODO: Implement daneWejsciowe() method.
     }
 }

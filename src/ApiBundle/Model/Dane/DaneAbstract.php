@@ -12,7 +12,7 @@ namespace ApiBundle\Model\Dane;
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Services\KontenerParametrow;
 
-class DaneAbstract implements DaneAbstractInterface
+abstract class DaneAbstract implements DaneAbstractInterface
 {
 
     /**
@@ -55,22 +55,22 @@ class DaneAbstract implements DaneAbstractInterface
         return $this->kontenerParametrow->pobierz($nazwaParametru);
     }
 
-    public function getDaneUzytkownika()
+    public function daneUzytkownika()
     {
-        return $this->getDaneUzytkownika();
+        return $this->uzytkownik;
     }
 
-    public function getIdZasobu()
+    public function idZasobu()
     {
         return $this->idZasobu;
     }
 
-    public function getNazwaMetodyApi()
+    public function nazwaMetodyApi()
     {
         return $this->nazwaMetodyApi;
     }
 
-    public function getKontenerParametrow()
+    public function kontenerParametrow()
     {
         return $this->kontenerParametrow;
     }

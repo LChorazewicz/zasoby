@@ -14,6 +14,7 @@ services:
         arguments: ['@service_container']
 
     api.kontener.parametrow:
+        class: ApiBundle\Services\KontenerParametrow
         arguments: ['@service_container']
 
     api.logger:

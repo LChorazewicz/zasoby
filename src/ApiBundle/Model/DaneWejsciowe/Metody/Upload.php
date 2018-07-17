@@ -46,6 +46,6 @@ class Upload extends DaneWejscioweAbstract implements DaneWejscioweInterface
      */
     public static function getNazwaMetodyApi()
     {
-        return Upload::class;
+        return 'Upload';
     }
 }

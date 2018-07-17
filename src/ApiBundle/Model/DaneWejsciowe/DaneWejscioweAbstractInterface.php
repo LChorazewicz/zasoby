@@ -6,7 +6,7 @@
  * Time: 17:00
  */
 
-namespace ApiBundle\Library\Helper\DaneWejsciowe;
+namespace ApiBundle\Model\DaneWejsciowe;
 
 
 use ApiBundle\Entity\Uzytkownik;

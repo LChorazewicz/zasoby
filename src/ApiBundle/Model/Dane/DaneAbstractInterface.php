@@ -26,15 +26,15 @@ interface DaneAbstractInterface
     /**
      * @return Uzytkownik
      */
-    public function getDaneUzytkownika();
+    public function daneUzytkownika();
 
     /**
      * @return string
      */
-    public function getIdZasobu();
+    public function idZasobu();
 
     /**
      * @return string
      */
-    public function getNazwaMetodyApi();
+    public function nazwaMetodyApi();
 }

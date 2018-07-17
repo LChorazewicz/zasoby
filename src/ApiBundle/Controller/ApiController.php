@@ -21,7 +21,6 @@ use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\ProcesujDaneWejsciowe;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
-use ApiBundle\Services\KontenerParametrow;
 use FOS\RestBundle\Controller\FOSRestController;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -37,12 +36,10 @@ class ApiController extends FOSRestController
     private $plik;
     private $procesorDanychWejsciowych;
 
-    public function __construct(KontenerParametrow $kontenerParametrow)
+    public function __construct()
     {
-        $this->plik = new FizycznyPlik($this->getParameter('maksymalny_rozmiar_pliku_w_megabajtach'));
-        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe($kontenerParametrow);
-        $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
-        $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+        $this->plik = new FizycznyPlik();
+        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe();
     }
     /**
      * @Route("/zasob", methods={"POST"})
@@ -53,6 +50,9 @@ class ApiController extends FOSRestController
     public function postZasobAction(Request $request)
     {
         $statusCode = Response::HTTP_CREATED; $msg = ['status' => 0];
+
+        $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+        $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
 
         try {
             /**
@@ -71,8 +71,7 @@ class ApiController extends FOSRestController
                 $metoda, $this->get('api.kontener.parametrow')
             );
 
-
-            $this->plik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
+            $this->plik->przeniesDoWlasciwegoKatalogu($daneWejsciowe);
             $this->plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
 
             $zasoby = $this->procesorDanychWejsciowych->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
@@ -423,3 +422,7 @@ class ApiController extends FOSRestController
         return $this->handleView($this->view($msg, $statusCode));
     }
 }
+
+/**
+ * todo: dodać klucze obce do tabel
+ */

@@ -27,35 +27,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ProcesujDaneWejsciowe
 {
-    /**
-     * @var $kontenerParametrow KontenerParametrow
-     */
-    private $kontenerParametrow;
-
-    public function __construct(KontenerParametrow $kontenerParametrow)
-    {
-        $this->kontenerParametrow = $kontenerParametrow;
-    }
-
-
-    /**
-     * @param Request $request
-     * @return DaneUpload
-     * @throws NiepelneDaneException
-     * @throws PustaKolekcjaException
-     */
-    public function przygotujDaneWejscioweUpload(Request $request)
-    {
-        try{
-        }catch (PustaKolekcjaException $exception){
-            throw new PustaKolekcjaException();
-        }catch (NiepelneDaneException $exception){
-            throw new NiepelneDaneException();
-        }
-
-        return $encja;
-    }
-
 
     /**
      * @param Request $request
@@ -168,7 +139,7 @@ class ProcesujDaneWejsciowe
             'czy_usuniety' => $request->request->get('czy_usuniety', null)
         ];
 
-        if(empty(array_filter($daneWejsciowe['elementy_do_zmiany']))){
+        if (empty(array_filter($daneWejsciowe['elementy_do_zmiany']))) {
             throw new NiepelneDaneException();
         }
 
@@ -182,34 +153,33 @@ class ProcesujDaneWejsciowe
      */
     public function przygotujDaneWejsciowePatch($request)
     {
-        try{
+        try {
             $encja = new DaneWejscioweAbstractPatch(json_decode($request->getContent()), $this->kontenerParametrow);
-        }catch (NiepelneDaneException $exception){
+        } catch (NiepelneDaneException $exception) {
             throw new NiepelneDaneException();
         }
 
         return $encja;
     }
 
-    /**
-     * @param DaneWejscioweInterface $daneWejsciowe
-     * @param KontenerParametrow $kontenerParametrow
-     * @return UploadInterface
-     */
+
     public function przygotujDane(DaneWejscioweInterface $daneWejsciowe, KontenerParametrow $kontenerParametrow)
     {
         $przygotowaneDaneWejsciowe = null;
 
-        switch ($daneWejsciowe::getNazwaMetodyApi()){
-            case Upload::class:{
+        switch ($daneWejsciowe::getNazwaMetodyApi()) {
+            case 'Upload': {
                 $przygotowaneDaneWejsciowe = (
                     new Upload($daneWejsciowe->getDaneUzytkownika(), $daneWejsciowe->getDaneWejsciowe(), $daneWejsciowe::getNazwaMetodyApi(), $kontenerParametrow)
                 )->pobierz();
                 break;
             }
-            case Download::class:{}
-            case Put::class:{}
-            case Delete::class:{}
+            case Download::class: {
+            }
+            case Put::class: {
+            }
+            case Delete::class: {
+            }
         }
 
         return $przygotowaneDaneWejsciowe;

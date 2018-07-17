@@ -11,7 +11,6 @@ namespace ApiBundle\Model\DaneWejsciowe;
 
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\UzytkownikNieIstniejeException;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweAbstractInterface;
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Symfony\Component\HttpFoundation\Request;
 

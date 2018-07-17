@@ -34,7 +34,7 @@ class FizycznyPlik
      * @param UploadInterface $upload
      * @throws BladZapisuPlikuNaDyskuException
      */
-    public function zapiszPlikiDoceloweNaDysku(UploadInterface $upload)
+    public function przeniesDoWlasciwegoKatalogu(UploadInterface $upload)
     {
         try {
             foreach ($upload->pobierzKolekcjePlikow() as $plik){
@@ -66,10 +66,6 @@ class FizycznyPlik
      */
     private function zapiszPlik(EncjaPliku $plik, bool $docelowy): EncjaPliku
     {
-        if ((int)$plik->getRozmiar() / 1024 / 1024 > (int)$this->maksymalnyRozmiarPliku) {
-            throw new RozmiarPlikuJestZbytDuzyException;
-        }
-
         $oPlik = new Plik();
 
         if($docelowy){
@@ -90,13 +86,49 @@ class FizycznyPlik
         return $plik;
     }
 
+    /**
+     * @param EncjaPliku $encjaPliku
+     * @return EncjaPliku
+     */
     public function zapiszPlikDocelowy(EncjaPliku $encjaPliku)
     {
        return $this->zapiszPlik($encjaPliku, true);
     }
 
+    /**
+     * @param EncjaPliku $encjaPliku
+     * @return EncjaPliku
+     */
+    public function przeniesPlikDoKataloguDocelowego(EncjaPliku $encjaPliku)
+    {
+        return $this->przeniesPlik($encjaPliku);
+    }
+
+    /**
+     * @param EncjaPliku $encjaPliku
+     * @return EncjaPliku
+     */
     public function zapiszPlikTymczasowy(EncjaPliku $encjaPliku)
     {
         return $this->zapiszPlik($encjaPliku, false);
+    }
+
+    /**
+     * @param EncjaPliku $encjaPliku
+     * @return EncjaPliku
+     */
+    private function przeniesPlik(EncjaPliku $encjaPliku)
+    {
+        $oPlik = new Plik();
+
+        $this->przygotujKatalogDoZapisu($encjaPliku->lokalizacja()->getKatalogZapisuDocelowego());
+
+        $oPlik->usun($encjaPliku->lokalizacja()->getSciezkaDoPlikuTymczasowego());
+        $encjaPliku->wlasciwosc()->setZapisanyPlikTymczasowy(false);
+        $encjaPliku->wlasciwosc()->setZapisanyPlikDocelowy(true);
+
+        $oPlik->przenies($encjaPliku->lokalizacja()->getSciezkaDoPlikuTymczasowego(), $encjaPliku->lokalizacja()->getSciezkaDoPlikuDocelowego());
+
+        return $encjaPliku;
     }
 }

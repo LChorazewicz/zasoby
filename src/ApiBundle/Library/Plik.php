@@ -13,7 +13,7 @@ use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\WarunkiBrzegowe\Plik as WalidacjaPliku;
 use ApiBundle\Model\FizycznyPlik;
-use ApiBundle\Library\Helper\DaneWejsciowe\Base64;
+use ApiBundle\Helper\DaneWejsciowe\Base64;
 
 class Plik
 {
@@ -33,7 +33,7 @@ class Plik
     }
 
     public function przenies($lokalizacjaObecna, $lokalizacjaDocelowa){
-        //todo
+        return rename($lokalizacjaObecna, $lokalizacjaDocelowa);
     }
 
     public function zakonczPrzetwarzaniePliku()

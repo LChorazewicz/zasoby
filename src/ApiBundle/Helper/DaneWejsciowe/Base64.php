@@ -6,7 +6,7 @@
  * Time: 16:50
  */
 
-namespace ApiBundle\Library\Helper\DaneWejsciowe;
+namespace ApiBundle\Helper\DaneWejsciowe;
 use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 
 /**
@@ -48,17 +48,17 @@ class Base64
         $base64 = str_replace('data:', '', $base64);
         $base64 = str_replace('base64,', '', $base64);
         $mimeTypeIBase64 = explode(';', $base64);
-        $nazwa = explode('.', $pierwotnaNazwa);
+        $nazwaIRozszerzenie = explode('.', $pierwotnaNazwa);
 
-        if(empty($nazwa) || strlen($nazwa[1]) < 2 || empty($mimeTypeIBase64) || empty($mimeTypeIBase64[0]) || empty($mimeTypeIBase64[1])) {
+        if(empty($nazwaIRozszerzenie) || strlen($nazwaIRozszerzenie[1]) < 2 || empty($mimeTypeIBase64) || empty($mimeTypeIBase64[0]) || empty($mimeTypeIBase64[1])) {
             throw new WarunkiBrzegoweNieZostalySpelnioneException();
         }
 
         $this->mimeType = $mimeTypeIBase64[0];
         $this->zawartosc = $mimeTypeIBase64[1];
 
-        $this->pierwotnaNazwa = $nazwa[0];
-        $this->rozszerzenie = $nazwa[1];
+        $this->pierwotnaNazwa = $nazwaIRozszerzenie[0];
+        $this->rozszerzenie = $nazwaIRozszerzenie[1];
     }
 
     /**

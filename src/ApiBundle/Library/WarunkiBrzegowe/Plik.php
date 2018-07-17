@@ -11,9 +11,18 @@ namespace ApiBundle\Library\WarunkiBrzegowe;
 
 
 use ApiBundle\Helper\EncjaPliku;
+use ApiBundle\Services\KontenerParametrow;
 
 class Plik
 {
+    private $parametr;
+    private static $maksymalnyRozmiarPlikuWMegaBajtach;
+
+    public function __construct(KontenerParametrow $kontenerParametrow)
+    {
+        $this->parametr = $kontenerParametrow;
+        self::$maksymalnyRozmiarPlikuWMegaBajtach = $this->parametr->pobierz('maksymalny_rozmiar_pliku_w_megabajtach');
+    }
     public static function czyEncjaPlikuKwalifikujeSieDoZapisu(EncjaPliku $encjaPliku)
     {
         return self::sprawdzMimeType($encjaPliku->getMimeType()) &&
@@ -63,6 +72,6 @@ class Plik
 
     public static function sprawdzRozmiar($rozmiar)
     {
-        return $rozmiar < 20000000;
+        return !(($rozmiar / 1024 / 1024) > self::$maksymalnyRozmiarPlikuWMegaBajtach);
     }
 }
