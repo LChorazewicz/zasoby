@@ -12,10 +12,8 @@ namespace ApiBundle\Model;
 use ApiBundle\Entity\Plik;
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\NiepelneDaneException;
-use ApiBundle\Exception\PustaKolekcjaException;
 use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\Helper\DaneWejsciowe\DaneWejscioweAbstractPatch;
-use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
 use ApiBundle\Model\Dane\Metody\Upload;
 use ApiBundle\Model\Dane\Metody\UploadInterface;
 use ApiBundle\Model\DaneWejsciowe\DaneWejscioweInterface;
@@ -69,26 +67,6 @@ class ProcesujDaneWejsciowe
         $encjaPliku->setIdZasobu($danePliku->getIdZasobu());
         $encjaPliku->setCzyUsuniety(false);
         return $encjaPliku;
-    }
-
-    /**
-     * @param UploadInterface $dane
-     * @return array
-     */
-    public function pobierzIdWszystkichZasobowDlaTegoZadania(UploadInterface $dane): array
-    {
-        $zasoby = [];
-
-        /**
-         * @var $plik EncjaPliku
-         */
-        foreach ($dane->pobierzKolekcjePlikow() as $plik) {
-            $zasoby[] = [
-                'id_zasobu' => $plik->getIdZasobu(),
-                'pierwotna_nazwa' => $plik->getPierwotnaNazwaPliku()
-            ];
-        }
-        return $zasoby;
     }
 
     /**

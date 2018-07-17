@@ -67,18 +67,18 @@ class ApiController extends FOSRestController
                 throw new UzytkownikNiePosiadaUprawnienException();
             }
 
-            $daneWejsciowe = $this->procesorDanychWejsciowych->przygotujDane(
+            $dane = $this->procesorDanychWejsciowych->przygotujDane(
                 $metoda, $this->get('api.kontener.parametrow')
             );
 
-            $this->plik->przeniesDoWlasciwegoKatalogu($daneWejsciowe);
-            $this->plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
+            $this->plik->przeniesDoWlasciwegoKatalogu($dane);
+            $this->plikRepository->zapiszInformacjeOPlikuWBazie($dane);
 
-            $zasoby = $this->procesorDanychWejsciowych->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
-
-            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
+            $zasoby = $dane->pobierzDaneWszystkichZapisanychZasobow($dane);
+            $this->wyslijEmailaZInformacjaOUploadzie($dane, $zasoby);
 
             $msg = ['status' => 1, 'zasoby' => $zasoby];
+
         } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
             $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
         } catch (RozmiarPlikuJestZbytDuzyException $exception) {
@@ -425,4 +425,5 @@ class ApiController extends FOSRestController
 
 /**
  * todo: dodać klucze obce do tabel
+ * todo: pierwotna nazwa zapisuje się bez rozszerzenia w bazie i encji
  */

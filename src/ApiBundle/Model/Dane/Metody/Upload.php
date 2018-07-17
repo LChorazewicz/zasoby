@@ -40,7 +40,7 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
     {
         $kolekcja = [];
 
-        foreach ($kolekcjaPlikow as $plik){
+        foreach ($kolekcjaPlikow as $plik) {
 
             $obiekt = (new Plik())->konwertujBase64DoEncjiPliku(
                 $plik->base64,
@@ -49,13 +49,13 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
                 $this->zmienna('katalog_do_zapisu_plikow') . Data::pobierzDzisiejszaDateWFormacieKrotkim() . '/',
                 $uzytkownikaDodajacy);
 
-            if(is_null($obiekt)){
+            if (is_null($obiekt)) {
                 continue;
             }
             $kolekcja[] = $obiekt;
         }
 
-        if(empty($kolekcja)){
+        if (empty($kolekcja)) {
             throw new PustaKolekcjaException();
         }
 
@@ -65,7 +65,7 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
     /**
      * @return UploadInterface
      */
-    public function pobierz() : UploadInterface
+    public function pobierz(): UploadInterface
     {
         return $this;
     }
@@ -81,5 +81,25 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
     public function pobierzDaneUzytkownika()
     {
         return $this->daneUzytkownika();
+    }
+
+    /**
+     * @param UploadInterface $upload
+     * @return array
+     */
+    public function pobierzDaneWszystkichZapisanychZasobow(UploadInterface $upload)
+    {
+        $zasoby = [];
+        /**
+         * @var $plik EncjaPliku
+         */
+        foreach ($upload->pobierzKolekcjePlikow() as $plik) {
+            $zasoby[] = [
+                'id_zasobu' => $plik->getIdZasobu(),
+                'pierwotna_nazwa' => $plik->getPierwotnaNazwaPliku()
+            ];
+        }
+
+        return $zasoby;
     }
 }
