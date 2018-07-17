@@ -4,6 +4,7 @@ namespace ApiBundle\Controller;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -64,14 +65,20 @@ class FormularzController extends Controller
                 'haslo' => $dane['haslo']
             ];
 
-            if($this->wielkoscWszystkichZalaczonychPlikow($dane['pliki']) >= 14000000){
+            if($this->wielkoscWszystkichZalaczonychPlikow($dane['pliki']) >= 14000000000){
                 try{
                     $odpowiedz = $this->wyslijPakietami($dane['pliki'], $daneDoWyslania);
                 }catch (\Exception $exception){
-                    die($exception);
-                }
+                    $odpowiedz = ['exception' => $exception->getMessage(), 'code' => $exception->getCode()];
+                    return new JsonResponse($odpowiedz);                }
             }else{
-                $odpowiedz = $this->wyslijBezPakietow($daneDoWyslania, $dane['pliki']);
+                try{
+                    $odpowiedz = $this->wyslijBezPakietow($daneDoWyslania, $dane['pliki']);
+                }catch (ClientException $exception){
+                    $odpowiedz = ['exception' => $exception->getMessage(), 'code' => $exception->getCode()];
+                    return new JsonResponse($odpowiedz);
+                }
+
             }
 
             return new JsonResponse(json_decode($odpowiedz->getBody()->getContents()));
@@ -274,10 +281,11 @@ class FormularzController extends Controller
         }
         $struktura['pliki'] = $pliki;
 
-        $klient = new Client(['timeout' => 15]);
+        $klient = new Client(['timeout' => 20]);
         $odpowiedz = $klient->post('http://mojschowek.pl/api/zasob', [
             'json' => $struktura
         ]);
+
         return $odpowiedz;
     }
 

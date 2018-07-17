@@ -16,14 +16,30 @@ use ApiBundle\Services\KontenerParametrow;
 
 class Plik
 {
+    /**
+     * @var KontenerParametrow
+     */
     private $parametr;
+
+    /**
+     * @var integer
+     */
     private static $maksymalnyRozmiarPlikuWMegaBajtach;
 
+    /**
+     * Plik constructor.
+     * @param KontenerParametrow $kontenerParametrow
+     */
     public function __construct(KontenerParametrow $kontenerParametrow)
     {
         $this->parametr = $kontenerParametrow;
         self::$maksymalnyRozmiarPlikuWMegaBajtach = $this->parametr->pobierz('maksymalny_rozmiar_pliku_w_megabajtach');
     }
+
+    /**
+     * @param EncjaPliku $encjaPliku
+     * @return bool
+     */
     public static function czyEncjaPlikuKwalifikujeSieDoZapisu(EncjaPliku $encjaPliku)
     {
         return self::sprawdzMimeType($encjaPliku->getMimeType()) &&
@@ -72,9 +88,13 @@ class Plik
         return $czySieKwalifikuje;
     }
 
-    public static function sprawdzRozmiar($rozmiar)
+    /**
+     * @param $rozmiar
+     * @return bool
+     */
+    private static function sprawdzRozmiar($rozmiar)
     {
-        return !(($rozmiar / 1024 / 1024) > self::$maksymalnyRozmiarPlikuWMegaBajtach);
+        return !(\ApiBundle\Library\Plik::zamienBajtyNaMegaBajty($rozmiar)  > self::$maksymalnyRozmiarPlikuWMegaBajtach);
     }
 
     /**
@@ -93,6 +113,6 @@ class Plik
             $rozmiar = $rozmiar + $plik->getRozmiar();
         }
 
-        return $rozmiar > $maksymalnyRozmiar;
+        return \ApiBundle\Library\Plik::zamienBajtyNaMegaBajty($rozmiar) > $maksymalnyRozmiar;
     }
 }

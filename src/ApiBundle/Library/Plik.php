@@ -36,22 +36,9 @@ class Plik
         return rename($lokalizacjaObecna, $lokalizacjaDocelowa);
     }
 
-    public function zakonczPrzetwarzaniePliku()
-    {
-
-    }
-
     public function czyPlikIstniejeNaDysku($sciezkaDoZasobu)
     {
         return file_exists($sciezkaDoZasobu);
-    }
-
-    /**
-     * @param EncjaPliku $kolekcjaPlikow
-     */
-    public function zapiszKolekcjePlikow($kolekcjaPlikow)
-    {
-
     }
 
     /**
@@ -104,5 +91,14 @@ class Plik
             ->setRozmiar(filesize($sciezkaZapisuTymczasowego));
 
         return $encjaPliku;
+    }
+
+    /**
+     * @param $bajty
+     * @return float
+     */
+    public static function zamienBajtyNaMegaBajty($bajty)
+    {
+        return ($bajty > 0) ? $bajty / 1024 / 1024 : 0.0;
     }
 }
