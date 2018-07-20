@@ -16,15 +16,14 @@ use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
 use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
 use ApiBundle\Library\WarunkiBrzegowe\Uprawnienia;
-use ApiBundle\Model\Dane\Metody\UploadInterface;
 use ApiBundle\Model\DaneWejsciowe\Metody\Upload;
 use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\ProcesujDaneWejsciowe;
+use ApiBundle\RabbitMQ\Producer\EmailProducer;
+use ApiBundle\RabbitMQ\Producer\Helper\WysylkaEmailowHelper;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use FOS\RestBundle\Controller\FOSRestController;
-use PhpAmqpLib\Message\AMQPMessage;
-use PhpAmqpLib\Wire\AMQPTable;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -76,7 +75,18 @@ class ApiController extends FOSRestController
             $this->plikRepository->zapiszInformacjeOPlikuWBazie($dane);
 
             $zasoby = $dane->pobierzDaneWszystkichZapisanychZasobow($dane);
-            $this->wyslijEmailaZInformacjaOUploadzie($dane, $zasoby);
+
+            (new EmailProducer(
+                (new WysylkaEmailowHelper())
+                    ->setNadawca($this->getParameter('nadawca_emailow'))
+                    ->setOdbiorca($this->getParameter('odbiorca_emailow'))
+                    ->setTemat("ApiZasoby - Upload plików")
+                    ->setWiadomosc($this->renderView("@Api/Email/upload.html.twig", [
+                        'uzytkownik' => $dane->pobierzDaneUzytkownika()->getLogin(),
+                        'lista_plikow' => $zasoby
+                    ]))
+                    ->setKolejka($this->get('api.kolejki'))
+            ))->wyslij();
 
             $msg = ['status' => 1, 'zasoby' => $zasoby];
 
@@ -278,34 +288,6 @@ class ApiController extends FOSRestController
         return $this->handleView($this->view($msg, $statusCode));
     }
 
-    /**
-     * @param UploadInterface $upload
-     * @param $zasoby
-     */
-    private function wyslijEmailaZInformacjaOUploadzie(UploadInterface $upload, $zasoby): void
-    {
-        $kolejka = $this->get('api.kolejki');
-
-        $msg = [
-            'temat' => "ApiZasoby - Upload plików",
-            'odbiorca' => $this->getParameter('odbiorca_emailow'),
-            'nadawca' => $this->getParameter('nadawca_emailow'),
-            'wiadomosc' => $this->renderView("@Api/Email/upload.html.twig", [
-                'uzytkownik' => $upload->pobierzDaneUzytkownika()->getLogin(),
-                'lista_plikow' => $zasoby
-            ])
-        ];
-
-        $wiadomosc = new AMQPMessage(json_encode($msg), [
-            'content_type' => 'text/plain',
-            'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
-            'application_headers' => new AMQPTable([
-                'x-delay' => 2000
-            ])
-        ]);
-
-        $kolejka->dodajWiadomosc($wiadomosc, 'kolejka_email');
-    }
 
     /**
      * @Route("/zasob/strumien", methods={"POST"})
@@ -435,4 +417,5 @@ class ApiController extends FOSRestController
 /**
  * todo: dodać klucze obce do tabel
  * todo: pierwotna nazwa zapisuje się bez rozszerzenia w bazie i encji
+ * todo: supervisor
  */

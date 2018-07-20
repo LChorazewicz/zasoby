@@ -24,6 +24,7 @@ old_sound_rabbit_mq:
             queue_options:    {name: 'kolejka_email'}
             callback: api.email.consumer
             enable_logger: true
+            qos_options:      {prefetch_count: 1}
         KOLEJKA_ZAPIS_PLIKOW:
             connection:       default
             queue_options:    {name: 'kolejka_zapis_plikow'}
