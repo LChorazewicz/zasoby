@@ -55,10 +55,4 @@ class Kolejka
         $this->kanal->basic_publish($wiadomosc, $exchange, $routingKey);
         return $this;
     }
-
-    public function dodajWiadomoscQos($wiadomosc, $exchange = '', $routingKey = '', $limitZadanPodejmowanychPrzezConsumera)
-    {
-        $this->kanal->basic_publish($wiadomosc, $exchange, $routingKey);
-        return $this;
-    }
 }

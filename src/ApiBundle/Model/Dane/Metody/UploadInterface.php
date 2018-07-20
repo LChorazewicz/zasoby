@@ -10,6 +10,8 @@ namespace ApiBundle\Model\Dane\Metody;
 
 
 use ApiBundle\Entity\Uzytkownik;
+use ApiBundle\RabbitMQ\Kolejka;
+use ApiBundle\Services\KontenerParametrow;
 
 interface UploadInterface
 {
@@ -29,4 +31,11 @@ interface UploadInterface
      * @return array
      */
     public function pobierzDaneWszystkichZapisanychZasobow(UploadInterface $upload);
+
+    /**
+     * @param Kolejka $kolejka
+     * @param string $wiadomosc
+     * @return void
+     */
+    public function wyslijEmailaPoZakonczeniuUploadu(Kolejka $kolejka, string $wiadomosc);
 }

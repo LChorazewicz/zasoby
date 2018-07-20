@@ -36,7 +36,6 @@ class ApiController extends FOSRestController
     private $plik;
     private $procesorDanychWejsciowych;
 
-
     /**
      * @Route("/zasob", methods={"POST"})
      * @param Request $request
@@ -76,17 +75,10 @@ class ApiController extends FOSRestController
 
             $zasoby = $dane->pobierzDaneWszystkichZapisanychZasobow($dane);
 
-            (new EmailProducer(
-                (new WysylkaEmailowHelper())
-                    ->setNadawca($this->getParameter('nadawca_emailow'))
-                    ->setOdbiorca($this->getParameter('odbiorca_emailow'))
-                    ->setTemat("ApiZasoby - Upload plików")
-                    ->setWiadomosc($this->renderView("@Api/Email/upload.html.twig", [
-                        'uzytkownik' => $dane->pobierzDaneUzytkownika()->getLogin(),
-                        'lista_plikow' => $zasoby
-                    ]))
-                    ->setKolejka($this->get('api.kolejki'))
-            ))->wyslij();
+            $dane->wyslijEmailaPoZakonczeniuUploadu($this->get('api.kolejki'), $this->renderView("@Api/Email/upload.html.twig", [
+                'uzytkownik' => $dane->pobierzDaneUzytkownika()->getLogin(),
+                'lista_plikow' => $zasoby
+            ]));
 
             $msg = ['status' => 1, 'zasoby' => $zasoby];
 

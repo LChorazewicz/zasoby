@@ -16,6 +16,9 @@ use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\Plik;
 use ApiBundle\Model\Dane\DaneAbstract;
 use ApiBundle\Model\Dane\DaneInterface;
+use ApiBundle\RabbitMQ\Kolejka;
+use ApiBundle\RabbitMQ\Producer\EmailProducer;
+use ApiBundle\RabbitMQ\Producer\Helper\WysylkaEmailowHelper;
 use ApiBundle\Services\KontenerParametrow;
 use ApiBundle\Utils\Data;
 use ApiBundle\Library\WarunkiBrzegowe\Plik as WarunkiBrzegowe;
@@ -114,5 +117,17 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
         }
 
         return $zasoby;
+    }
+
+    public function wyslijEmailaPoZakonczeniuUploadu(Kolejka $kolejka, string $wiadomosc)
+    {
+        (new EmailProducer(
+            (new WysylkaEmailowHelper())
+                ->setNadawca($this->kontenerParametrow()->pobierz('nadawca_emailow'))
+                ->setOdbiorca($this->kontenerParametrow()->pobierz('odbiorca_emailow'))
+                ->setTemat("ApiZasoby - Upload plików")
+                ->setWiadomosc($wiadomosc)
+                ->setKolejka($kolejka)
+        ))->wyslij();
     }
 }

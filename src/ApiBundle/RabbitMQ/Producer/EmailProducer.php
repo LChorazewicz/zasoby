@@ -52,6 +52,6 @@ class EmailProducer implements WyslijEmailaInterface
 
     public function wyslij(): void
     {
-        $this->kolejka->dodajWiadomoscQos($this->wiadomosc, KolejkaStale::EMAIL, '', KolejkaStale::LIMIT_CONSUMERA_EMAIL);
+        $this->kolejka->dodajWiadomosc($this->wiadomosc, KolejkaStale::EMAIL, '');
     }
 }
