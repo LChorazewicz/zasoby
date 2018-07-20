@@ -9,7 +9,12 @@
 namespace ApiBundle\Services;
 
 
+use ApiBundle\Library\Plik;
+
 class ZapisPlikowNaDyskuService
 {
-
+    public function zapisz($lokalizacja, $zawartosc)
+    {
+        return (new Plik())->zapisz($lokalizacja, $zawartosc);
+    }
 }

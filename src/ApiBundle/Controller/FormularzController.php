@@ -65,7 +65,7 @@ class FormularzController extends Controller
                 'haslo' => $dane['haslo']
             ];
 
-            if($this->wielkoscWszystkichZalaczonychPlikow($dane['pliki']) >= 14000000000){
+            if($this->wielkoscWszystkichZalaczonychPlikow($dane['pliki']) <= 0){
                 try{
                     $odpowiedz = $this->wyslijPakietami($dane['pliki'], $daneDoWyslania);
                 }catch (\Exception $exception){

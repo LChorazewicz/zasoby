@@ -25,5 +25,6 @@ class ZapisPlikowNaDyskuConsumer implements ConsumerInterface
      */
     public function execute(AMQPMessage $msg)
     {
+        $msg = json_decode($msg->getBody());
     }
 }

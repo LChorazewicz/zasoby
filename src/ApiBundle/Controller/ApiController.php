@@ -37,11 +37,6 @@ class ApiController extends FOSRestController
     private $plik;
     private $procesorDanychWejsciowych;
 
-    public function __construct()
-    {
-        $this->plik = new FizycznyPlik();
-        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe();
-    }
 
     /**
      * @Route("/zasob", methods={"POST"})
@@ -56,6 +51,9 @@ class ApiController extends FOSRestController
 
         $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
         $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+
+        $this->plik = new FizycznyPlik(0, $this->get('api.kolejki'));
+        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe();
 
         try {
             /**
