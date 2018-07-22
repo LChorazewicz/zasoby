@@ -89,6 +89,13 @@ class Plik
     private $idZasobu;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(name="czy_szkic", type="boolean", nullable=false)
+     */
+    private $szkic;
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -114,10 +121,12 @@ class Plik
 
     /**
      * @param string $sciezka
+     * @return $this
      */
     public function setSciezka(string $sciezka)
     {
         $this->sciezka = $sciezka;
+        return $this;
     }
 
     /**
@@ -130,10 +139,12 @@ class Plik
 
     /**
      * @param string $mimeType
+     * @return $this
      */
     public function setMimeType(string $mimeType)
     {
         $this->mimeType = $mimeType;
+        return $this;
     }
 
     /**
@@ -146,10 +157,12 @@ class Plik
 
     /**
      * @param string $pierwotnaNazwa
+     * @return $this
      */
     public function setPierwotnaNazwa(string $pierwotnaNazwa)
     {
         $this->pierwotnaNazwa = $pierwotnaNazwa;
+        return $this;
     }
 
     /**
@@ -162,10 +175,12 @@ class Plik
 
     /**
      * @param int $rozmiar
+     * @return $this
      */
     public function setRozmiar(int $rozmiar)
     {
         $this->rozmiar = $rozmiar;
+        return $this;
     }
 
     /**
@@ -178,10 +193,12 @@ class Plik
 
     /**
      * @param \DateTime $dataDodania
+     * @return $this
      */
     public function setDataDodania(\DateTime $dataDodania)
     {
         $this->dataDodania = $dataDodania;
+        return $this;
     }
 
     /**
@@ -194,10 +211,12 @@ class Plik
 
     /**
      * @param int $uzytkownikDodajacy
+     * @return $this
      */
     public function setUzytkownikDodajacy(int $uzytkownikDodajacy)
     {
         $this->uzytkownikDodajacy = $uzytkownikDodajacy;
+        return $this;
     }
 
     /**
@@ -210,10 +229,12 @@ class Plik
 
     /**
      * @param bool $czyUsuniety
+     * @return $this
      */
     public function setCzyUsuniety(bool $czyUsuniety)
     {
         $this->czyUsuniety = $czyUsuniety;
+        return $this;
     }
 
     /**
@@ -226,10 +247,12 @@ class Plik
 
     /**
      * @param string $nazwaZasobu
+     * @return $this
      */
     public function setNazwaZasobu(string $nazwaZasobu)
     {
         $this->nazwaZasobu = $nazwaZasobu;
+        return $this;
     }
 
     /**
@@ -242,11 +265,30 @@ class Plik
 
     /**
      * @param string $idZasobu
+     * @return $this
      */
     public function setIdZasobu(string $idZasobu)
     {
         $this->idZasobu = $idZasobu;
+        return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function isSzkic(): bool
+    {
+        return $this->szkic;
+    }
+
+    /**
+     * @param bool $szkic
+     * @return $this
+     */
+    public function setSzkic(bool $szkic)
+    {
+        $this->szkic = $szkic;
+        return $this;
+    }
 }
 

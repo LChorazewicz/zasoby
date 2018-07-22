@@ -4,11 +4,8 @@ namespace ApiBundle\Repository;
 
 use ApiBundle\Entity\Plik;
 use ApiBundle\Exception\ZasobNieIstniejeException;
-use ApiBundle\Library\Helper\DaneWejsciowe\DaneUpload;
-use ApiBundle\Library\Helper\DaneWejsciowe\EncjaPlikuNaPoziomieDanychWejsciowych;
-use ApiBundle\Library\Helper\EncjaPliku;
-use ApiBundle\Model\Dane\Metody\UploadInterface;
-use ApiBundle\Model\FizycznyPlik;
+use ApiBundle\Model\Dane\Metody\Interfaces\StrumienSzkicInterface;
+use ApiBundle\Model\Dane\Metody\Interfaces\UploadInterface;
 use ApiBundle\Model\ProcesujDaneWejsciowe;
 
 /**
@@ -58,7 +55,7 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
     /**
      * @param UploadInterface $upload
      */
-    public function zapiszInformacjeOPlikuWBazie(UploadInterface $upload): void
+    public function zapiszEncjeWBazieUpload(UploadInterface $upload): void
     {
         $managerEncji = $this->getEntityManager();
 
@@ -66,6 +63,16 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
             $managerEncji->persist(ProcesujDaneWejsciowe::uzupelnijEncjePliku($danePliku, $upload->pobierzDaneUzytkownika()));
             $managerEncji->flush();
         }
+    }
+
+    /**
+     * @param Plik $plik
+     */
+    public function zapiszPojedynczaEncjeWBazie(Plik $plik)
+    {
+        $managerEncji = $this->getEntityManager();
+        $managerEncji->persist($plik);
+        $managerEncji->flush();
     }
 
     public function usunMiekkoPlik($id_zasobu)
@@ -86,5 +93,14 @@ class PlikRepository extends \Doctrine\ORM\EntityRepository
 
         }
         return true;
+    }
+
+    /**
+     * @param StrumienSzkicInterface $strumienSzkic
+     */
+    public function stworzSzkicPlikuWBazie(StrumienSzkicInterface $strumienSzkic)
+    {
+        $managerEncji = $this->getEntityManager();
+
     }
 }

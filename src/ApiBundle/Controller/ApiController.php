@@ -16,11 +16,10 @@ use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
 use ApiBundle\Exception\WarunkiBrzegoweNieZostalySpelnioneException;
 use ApiBundle\Exception\ZasobNieIstniejeException;
 use ApiBundle\Library\WarunkiBrzegowe\Uprawnienia;
+use ApiBundle\Model\DaneWejsciowe\Metody\StrumienSzkic;
 use ApiBundle\Model\DaneWejsciowe\Metody\Upload;
 use ApiBundle\Model\FizycznyPlik;
 use ApiBundle\Model\ProcesujDaneWejsciowe;
-use ApiBundle\RabbitMQ\Producer\EmailProducer;
-use ApiBundle\RabbitMQ\Producer\Helper\WysylkaEmailowHelper;
 use ApiBundle\Repository\PlikRepository;
 use ApiBundle\Repository\UzytkownikRepository;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -60,18 +59,14 @@ class ApiController extends FOSRestController
             $metoda = new Upload($request, $this->get('doctrine'));
 
             $uprawnienia = new Uprawnienia();
-            $uzytkownikMozeKontynuowac = $uprawnienia->sprawdzUprawnieniaDoMetody($metoda);
-
-            if (!$uzytkownikMozeKontynuowac) {
-                throw new UzytkownikNiePosiadaUprawnienException();
-            }
+            $uprawnienia->sprawdzUprawnieniaDoMetody($metoda);
 
             $dane = $this->procesorDanychWejsciowych->przygotujDane(
                 $metoda, $this->get('api.kontener.parametrow')
             );
 
             $this->plik->przeniesDoWlasciwegoKatalogu($dane);
-            $this->plikRepository->zapiszInformacjeOPlikuWBazie($dane);
+            $this->plikRepository->zapiszEncjeWBazieUpload($dane);
 
             $zasoby = $dane->pobierzDaneWszystkichZapisanychZasobow($dane);
 
@@ -280,50 +275,35 @@ class ApiController extends FOSRestController
         return $this->handleView($this->view($msg, $statusCode));
     }
 
-
     /**
      * @Route("/zasob/strumien", methods={"POST"})
      * @param Request $request
      * @return Response
      * @throws UzytkownikNieIstniejeException
      */
-    public function postZasobStrumienAction(Request $request)
+    public function postStrumienSzkicAction(Request $request)
     {
         $statusCode = Response::HTTP_CREATED;
         $msg = ['status' => 0];
 
+        $this->plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+        $this->uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+
+        $this->procesorDanychWejsciowych = new ProcesujDaneWejsciowe();
+
         try {
-            $przetworzDane = new ProcesujDaneWejsciowe($this->kontenerParametrow);
-            $fizycznyPlik = new FizycznyPlik($this->kontenerParametrow->pobierzParametrZConfigu('maksymalny_rozmiar_pliku_w_megabajtach'));
-            $plikRepository = $this->getDoctrine()->getRepository(Plik::class);
+            $metoda = new StrumienSzkic($request, $this->get('doctrine'));
 
-            /**
-             * @var $uzytkownik UzytkownikRepository
-             */
-            $uzytkownik = $this->getDoctrine()->getRepository(Uzytkownik::class);
+            $uprawnienia = new Uprawnienia();
+            $uprawnienia->sprawdzUprawnieniaDoMetody($metoda);
 
-            $daneWejsciowe = $przetworzDane->przygotujDaneWejsciowePatch($request);
+            $dane = $this->procesorDanychWejsciowych->przygotujDane(
+                $metoda, $this->get('api.kontener.parametrow')
+            );
 
-            if (!$uzytkownik->czyIstniejeTakiUzytkownik($daneWejsciowe->getDaneUzytkownika()->getLogin())) {
-                throw new UzytkownikNiePosiadaUprawnienException();
-            }
+            $dane->zapiszSzkicWBazie($this->plikRepository, $this->getDoctrine()->getRepository(Uzytkownik::class), $dane->getEncjaSzkicu());
 
-            $daneWejsciowe->getDaneUzytkownika()->setId($uzytkownik->pobierzIdUzytkownikaPoLoginie(
-                $daneWejsciowe->getDaneUzytkownika()->getLogin(), $daneWejsciowe->getDaneUzytkownika()->getHaslo()
-            ));
-//
-//            $fizycznyPlik->zapiszPlikiDoceloweNaDysku($daneWejsciowe);
-//            $plikRepository->zapiszInformacjeOPlikuWBazie($daneWejsciowe);
-//
-//            $zasoby = $przetworzDane->pobierzIdWszystkichZasobowDlaTegoZadania($daneWejsciowe);
-//
-//            $this->wyslijEmailaZInformacjaOUploadzie($daneWejsciowe, $zasoby);
-
-//            $msg = ['status' => 1, 'zasoby' => $zasoby];
-        } catch (BladZapisuPlikuNaDyskuException $bladZapisuPlikuNaDysku) {
-            $statusCode = Response::HTTP_SERVICE_UNAVAILABLE;
-        } catch (RozmiarPlikuJestZbytDuzyException $exception) {
-            $statusCode = Response::HTTP_REQUEST_ENTITY_TOO_LARGE;
+            $msg = ['status' => 1, 'zasoby' => $dane->pobierzInformacjeZapisu()];
         } catch (NiepelneDaneException $exception) {
             $statusCode = Response::HTTP_BAD_REQUEST;
         } catch (BrakLacznosciZBazaException $exception) {
@@ -409,5 +389,6 @@ class ApiController extends FOSRestController
 /**
  * todo: dodać klucze obce do tabel
  * todo: pierwotna nazwa zapisuje się bez rozszerzenia w bazie i encji
- * todo: supervisor
+ * todo: supervisor, apidoc
+ * todo: uwzględnić w metodzie Get szkic pliku - zwrócić 202 Accepted
  */

@@ -8,10 +8,9 @@
 
 namespace ApiBundle\Library\WarunkiBrzegowe;
 
-
-
 use ApiBundle\Helper\EncjaPliku;
-use ApiBundle\Model\Dane\Metody\UploadInterface;
+use ApiBundle\Repository\PlikRepository;
+use ApiBundle\Repository\UzytkownikRepository;
 use ApiBundle\Services\KontenerParametrow;
 
 class Plik
@@ -114,5 +113,25 @@ class Plik
         }
 
         return \ApiBundle\Library\Plik::zamienBajtyNaMegaBajty($rozmiar) > $maksymalnyRozmiar;
+    }
+
+    private static function uzytkownikProbujeNadpisacPlikKtoryNieJestSzkicem(){return false;}
+
+    public static function szkicPlikuKwalifikujeSieDoZapisu(\ApiBundle\Entity\Plik $plik, PlikRepository $plikRepository, UzytkownikRepository $uzytkownik)
+    {
+        if(!self::uzytkownikProbujeNadpisacPlikKtoryNieJestSzkicem()){
+            return true;
+        }
+        return false;
+    }
+
+    public static function rozszerzeniePlikiPasujeDoMimeType(string $mimeType)
+    {
+        //
+    }
+
+    public function uzytkownikProbujeWykonacAtakTypuDDoS()
+    {
+
     }
 }

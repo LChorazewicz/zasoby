@@ -2,20 +2,21 @@
 /**
  * Created by PhpStorm.
  * User: leszek
- * Date: 16.07.18
- * Time: 17:51
+ * Date: 20.07.18
+ * Time: 23:18
  */
 
 namespace ApiBundle\Model\DaneWejsciowe\Metody;
 
+
+use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\Exception\NiepelneDaneException;
 use ApiBundle\Model\DaneWejsciowe\DaneWejscioweAbstract;
 use ApiBundle\Model\DaneWejsciowe\DaneWejscioweInterface;
 use Doctrine\Bundle\DoctrineBundle\Registry;
-use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 
-class Upload extends DaneWejscioweAbstract implements DaneWejscioweInterface
+class StrumienSzkic extends DaneWejscioweAbstract implements DaneWejscioweInterface
 {
     /**
      * Upload constructor.
@@ -29,14 +30,6 @@ class Upload extends DaneWejscioweAbstract implements DaneWejscioweInterface
     }
 
     /**
-     * @return \ApiBundle\Entity\Uzytkownik
-     */
-    public function getDaneUzytkownika()
-    {
-        return $this->daneUzytkownika();
-    }
-
-    /**
      * @return \stdClass
      */
     public function getDaneWejsciowe()
@@ -45,11 +38,19 @@ class Upload extends DaneWejscioweAbstract implements DaneWejscioweInterface
     }
 
     /**
+     * @return Uzytkownik
+     */
+    public function getDaneUzytkownika()
+    {
+        return $this->daneUzytkownika();
+    }
+
+    /**
      * @return string
      */
     public static function getNazwaMetodyApi()
     {
-        return 'Upload';
+        return 'StrumienSzkic';
     }
 
     /**
@@ -59,25 +60,22 @@ class Upload extends DaneWejscioweAbstract implements DaneWejscioweInterface
      */
     public function walidujDaneWejsciowe(\stdClass $daneWejsciowe): bool
     {
-        $pliki = [];
-
         try{
-            foreach ($daneWejsciowe->pliki as $plik) {
-                $pliki[] = [
-                    'pierwotna_nazwa' => $plik->pierwotna_nazwa,
-                    'base64' => $plik->base64
-                ];
-            }
+            $daneOczekiwane = [
+                'pierwotna_nazwa' => $daneWejsciowe->dane_pliku->pierwotna_nazwa,
+                'mime_type' => $daneWejsciowe->dane_pliku->pierwotna_nazwa,
+                'rozmiar' => $daneWejsciowe->dane_pliku->pierwotna_nazwa,
+            ];
 
-            if(array_search(null, $pliki, true) || empty($pliki)){
+            if(array_search(null, $daneOczekiwane, true)){
                 throw new NiepelneDaneException();
             }
-        }catch (NiepelneDaneException $daneException){
+
+        }catch (NiepelneDaneException $exception){
             throw new NiepelneDaneException();
         }catch (\Exception $exception){
             throw new NiepelneDaneException();
         }
-
 
         return true;
     }

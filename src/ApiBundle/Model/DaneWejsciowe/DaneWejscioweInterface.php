@@ -36,4 +36,10 @@ interface DaneWejscioweInterface
      * @return string
      */
     public static function getNazwaMetodyApi();
+
+    /**
+     * @param \stdClass $daneWejsciowe
+     * @return bool
+     */
+    public function walidujDaneWejsciowe(\stdClass $daneWejsciowe): bool;
 }

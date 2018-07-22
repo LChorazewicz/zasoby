@@ -16,6 +16,7 @@ use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\Plik;
 use ApiBundle\Model\Dane\DaneAbstract;
 use ApiBundle\Model\Dane\DaneInterface;
+use ApiBundle\Model\Dane\Metody\Interfaces\UploadInterface;
 use ApiBundle\RabbitMQ\Kolejka;
 use ApiBundle\RabbitMQ\Producer\EmailProducer;
 use ApiBundle\RabbitMQ\Producer\Helper\WysylkaEmailowHelper;
@@ -25,9 +26,6 @@ use ApiBundle\Library\WarunkiBrzegowe\Plik as WarunkiBrzegowe;
 
 class Upload extends DaneAbstract implements DaneInterface, UploadInterface
 {
-    /**
-     * @var EncjaPliku $kolekcjaPlikow | []
-     */
     private $kolekcjaPlikow;
 
     /**
@@ -37,9 +35,9 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
      * @param $nazwaMetodyApi
      * @param KontenerParametrow $kontenerParametrow
      */
-    public function __construct(Uzytkownik $uzytkownik, $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
+    public function __construct(Uzytkownik $uzytkownik, \stdClass $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
     {
-        parent::__construct($uzytkownik, '', $nazwaMetodyApi, $kontenerParametrow);
+        parent::__construct($uzytkownik, $daneWejsciowe, $nazwaMetodyApi, $kontenerParametrow);
         $this->setKolekcjaPlikow($daneWejsciowe->pliki, $this->pobierzDaneUzytkownika());
     }
 
@@ -84,6 +82,11 @@ class Upload extends DaneAbstract implements DaneInterface, UploadInterface
     public function pobierz(): UploadInterface
     {
         return $this;
+    }
+
+    public function pobierzKolekcjeEncji(): array
+    {
+        return $this->kolekcjaPlikow;
     }
 
     public function pobierzKolekcjePlikow()

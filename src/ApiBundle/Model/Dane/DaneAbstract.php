@@ -21,9 +21,9 @@ abstract class DaneAbstract implements DaneAbstractInterface
     private $uzytkownik;
 
     /**
-     * @var string
+     * @var \stdClass
      */
-    private $idZasobu;
+    private $daneWejsciowe;
 
     /**
      * @var string
@@ -38,14 +38,14 @@ abstract class DaneAbstract implements DaneAbstractInterface
     /**
      * DaneAbstract constructor.
      * @param Uzytkownik $uzytkownik
-     * @param $idZasobu
+     * @param \stdClass $daneWejsciowe
      * @param $nazwaMetodyApi
      * @param KontenerParametrow $kontenerParametrow
      */
-    public function __construct(Uzytkownik $uzytkownik, $idZasobu, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
+    public function __construct(Uzytkownik $uzytkownik, \stdClass $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow)
     {
         $this->uzytkownik = $uzytkownik;
-        $this->idZasobu = $idZasobu;
+        $this->daneWejsciowe = $daneWejsciowe;
         $this->nazwaMetodyApi = $nazwaMetodyApi;
         $this->kontenerParametrow = $kontenerParametrow;
     }
@@ -60,9 +60,9 @@ abstract class DaneAbstract implements DaneAbstractInterface
         return $this->uzytkownik;
     }
 
-    public function idZasobu()
+    public function daneWejsciowe()
     {
-        return $this->idZasobu;
+        return $this->daneWejsciowe;
     }
 
     public function nazwaMetodyApi()

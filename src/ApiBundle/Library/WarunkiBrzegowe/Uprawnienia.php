@@ -10,10 +10,16 @@ namespace ApiBundle\Library\WarunkiBrzegowe;
 
 
 use ApiBundle\Entity\Uzytkownik;
+use ApiBundle\Exception\UzytkownikNiePosiadaUprawnienException;
 use ApiBundle\Model\DaneWejsciowe\DaneWejscioweInterface;
 
 class Uprawnienia
 {
+    /**
+     * @param DaneWejscioweInterface $daneWejsciowe
+     * @return bool
+     * @throws UzytkownikNiePosiadaUprawnienException
+     */
     public function sprawdzUprawnieniaDoMetody(DaneWejscioweInterface $daneWejsciowe)
     {
         $wynik = [];
@@ -26,12 +32,20 @@ class Uprawnienia
             $wynik[] = false;
         }
 
-        return !(in_array(false, $wynik, true));
+        if(in_array(false, $wynik, true)){
+            throw new UzytkownikNiePosiadaUprawnienException();
+        }
+
+        return true;
     }
 
     public static function uzytkownikPosiadaUprawnieniaDoMetody(Uzytkownik $uzytkownik, $nazwaMetody)
     {
-        return true;
+        switch ($nazwaMetody){
+            case 'Upload': return true;
+            case 'StrumienSzkic': return true;
+        }
+        return false;
     }
 
     public static function uzytkownikDodajacyPrzekroczylLimituObslugiMetody(Uzytkownik $uzytkownik, $nazwaMetody)

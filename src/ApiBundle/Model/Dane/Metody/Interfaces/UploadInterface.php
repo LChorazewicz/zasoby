@@ -6,12 +6,11 @@
  * Time: 23:09
  */
 
-namespace ApiBundle\Model\Dane\Metody;
+namespace ApiBundle\Model\Dane\Metody\Interfaces;
 
 
 use ApiBundle\Entity\Uzytkownik;
 use ApiBundle\RabbitMQ\Kolejka;
-use ApiBundle\Services\KontenerParametrow;
 
 interface UploadInterface
 {

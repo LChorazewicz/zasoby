@@ -13,7 +13,7 @@ use ApiBundle\Exception\BladZapisuPlikuNaDyskuException;
 use ApiBundle\Exception\RozmiarPlikuJestZbytDuzyException;
 use ApiBundle\Helper\EncjaPliku;
 use ApiBundle\Library\Plik;
-use ApiBundle\Model\Dane\Metody\UploadInterface;
+use ApiBundle\Model\Dane\Metody\Interfaces\UploadInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class FizycznyPlik

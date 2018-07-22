@@ -17,11 +17,11 @@ interface DaneAbstractInterface
     /**
      * DaneAbstractInterface constructor.
      * @param Uzytkownik $uzytkownik
-     * @param $idZasobu
+     * @param $daneWejsciowe
      * @param $nazwaMetodyApi
      * @param KontenerParametrow $kontenerParametrow
      */
-    public function __construct(Uzytkownik $uzytkownik, $idZasobu, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow);
+    public function __construct(Uzytkownik $uzytkownik, \stdClass $daneWejsciowe, $nazwaMetodyApi, KontenerParametrow $kontenerParametrow);
 
     /**
      * @return Uzytkownik
@@ -31,7 +31,7 @@ interface DaneAbstractInterface
     /**
      * @return string
      */
-    public function idZasobu();
+    public function daneWejsciowe();
 
     /**
      * @return string
